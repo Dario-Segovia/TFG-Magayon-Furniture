@@ -1,0 +1,10 @@
+{
+    "login": {
+      "title": "Log in",
+      "username": "Username",
+      "password": "Password",
+      "submit": "Login",
+      "access": "Access granted as"
+    }
+  }
+  
