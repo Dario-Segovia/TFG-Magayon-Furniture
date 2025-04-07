@@ -2,6 +2,7 @@ import { createApp } from "vue";
 import App from "./App.vue";
 import router from "./router/index.js";
 import i18n from './i18n.js';
+import 'vue-cal/dist/vuecal.css';
 import '@fortawesome/fontawesome-free/css/all.css';
 
 createApp(App)
