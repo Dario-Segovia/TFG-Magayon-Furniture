@@ -66,6 +66,8 @@ pub async fn create_horario(pool: State<'_, PgPool>, horario: NuevoHorario) -> R
 
 #[tauri::command]
 pub async fn update_horario(pool: State<'_, PgPool>, id: i32, horario: NuevoHorario) -> Result<(), String> {
+    println!("Datos recibidos para actualizar: id = {}, horario = {:?}", id, horario); // 👈 Log para depurar
+
     sqlx::query!(
         r#"
         UPDATE horarios
@@ -82,8 +84,12 @@ pub async fn update_horario(pool: State<'_, PgPool>, id: i32, horario: NuevoHora
     )
     .execute(&*pool)
     .await
-    .map_err(|e| format!("Error al actualizar horario: {}", e))?;
+    .map_err(|e| {
+        println!("Error al actualizar horario: {}", e); // 👈 Log para errores SQL
+        format!("Error al actualizar horario: {}", e)
+    })?;
 
+    println!("Horario actualizado correctamente: id = {}", id); // 👈 Log para éxito
     Ok(())
 }
 

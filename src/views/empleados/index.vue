@@ -1,0 +1,188 @@
+<template>
+    <div class="empleados-container">
+      <EmployeeHeader 
+        @create="openCreateForm" 
+        @show-calendar="openCalendar" 
+      />
+      
+      <EmployeeSearch 
+        v-model="searchQuery" 
+        :count="filteredEmployees.length" 
+      />
+      
+      <EmployeeList
+      :employees="employeeData"
+    :loading="isLoading"
+    @edit="handleEdit"
+        @show-calendar="openEmployeeCalendar"
+      />
+      
+      <EmployeeForm
+        v-model:show="showForm"
+        :is-editing="isEditing"
+        :form-data="formData"
+        :labels="labels"
+        :required-fields="requiredFields"
+        @submit="submitForm"
+        @close="closeForm"
+      />
+      
+      <CalendarModal
+        v-model:show="showCalendar"
+        :employee-id="selectedEmployeeId"
+        :employee-name="getEmployeeName(selectedEmployeeId)"
+        @close="closeCalendar"
+      />
+    </div>
+  </template>
+  
+  <script setup>
+  import { ref, computed, onMounted } from 'vue';
+  import { invoke } from '@tauri-apps/api/core';
+  import EmployeeHeader from './components/EmployeeHeader.vue';
+  import EmployeeSearch from './components/EmployeeSearch.vue';
+  import EmployeeList from './components/EmployeeList.vue';
+  import EmployeeForm from './components/EmployeeForm.vue';
+  import CalendarModal from './components/CalendarModal.vue';
+  
+  // Estado
+  const loading = ref(true);
+  const employees = ref([]);
+  const searchQuery = ref('');
+  const showForm = ref(false);
+  const isEditing = ref(false);
+  const currentEmployeeId = ref(null);
+  const showCalendar = ref(false);
+  const selectedEmployeeId = ref(null);
+  const calendarKey = ref(0);
+  
+  // Constantes
+  const labels = {
+    nombre: 'Nombre',
+    apellido: 'Apellido',
+    email: 'Email',
+    telefono: 'Teléfono',
+    puesto: 'Puesto',
+    salario: 'Salario',
+    fecha_contratacion: 'Fecha de Contratación'
+  };
+  
+  const requiredFields = ['nombre', 'apellido', 'email', 'puesto', 'fecha_contratacion'];
+  
+  const formData = ref({
+    nombre: '',
+    apellido: '',
+    email: '',
+    telefono: null,
+    puesto: '',
+    salario: null,
+    fecha_contratacion: new Date().toISOString().split('T')[0]
+  });
+  
+  // Computed
+  const filteredEmployees = computed(() => {
+    if (!searchQuery.value) return employees.value;
+    const query = searchQuery.value.toLowerCase();
+    return employees.value.filter(emp =>
+      emp.nombre.toLowerCase().includes(query) ||
+      emp.apellido.toLowerCase().includes(query) ||
+      emp.puesto.toLowerCase().includes(query) ||
+      (emp.email && emp.email.toLowerCase().includes(query))
+    );
+  });
+  
+  // Métodos
+  const loadEmployees = async () => {
+    try {
+      loading.value = true;
+      employees.value = await invoke('get_employees');
+    } catch (error) {
+      console.error('Error al cargar empleados:', error);
+    } finally {
+      loading.value = false;
+    }
+  };
+  
+  const formatDate = (dateString) => new Date(dateString).toLocaleDateString('es-ES');
+  const formatSalary = (salary) => salary
+    ? new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(salary)
+    : 'Salario no especificado';
+  
+  const openCreateForm = () => {
+    isEditing.value = false;
+    currentEmployeeId.value = null;
+    resetForm();
+    showForm.value = true;
+  };
+  
+  const openEditForm = (employee) => {
+    isEditing.value = true;
+    currentEmployeeId.value = employee.id;
+    formData.value = {
+      nombre: employee.nombre,
+      apellido: employee.apellido,
+      email: employee.email,
+      telefono: employee.telefono || null,
+      puesto: employee.puesto,
+      salario: employee.salario || null,
+      fecha_contratacion: (employee.fechaContratacion || employee.fecha_contratacion).split('T')[0]
+    };
+    showForm.value = true;
+  };
+  
+  const submitForm = async () => {
+    try {
+      const payload = { ...formData.value };
+      payload.fechaContratacion = payload.fecha_contratacion;
+  
+      if (isEditing.value) {
+        await invoke('update_employee', { id: currentEmployeeId.value, ...payload });
+      } else {
+        await invoke('create_employee', payload);
+      }
+  
+      await loadEmployees();
+      closeForm();
+    } catch (error) {
+      console.error('Error al guardar empleado:', error);
+      alert(`Error al guardar empleado: ${error}`);
+    }
+  };
+  
+  const resetForm = () => {
+    formData.value = {
+      nombre: '', apellido: '', email: '', telefono: null,
+      puesto: '', salario: null,
+      fecha_contratacion: new Date().toISOString().split('T')[0]
+    };
+  };
+  
+  const closeForm = () => showForm.value = false;
+  
+  const openEmployeeCalendar = (employeeId) => {
+    selectedEmployeeId.value = employeeId;
+    calendarKey.value++;
+    showCalendar.value = true;
+  };
+  
+  const openCalendar = () => showCalendar.value = true;
+  const closeCalendar = () => showCalendar.value = false;
+  
+  const getEmployeeName = (id) => {
+    const emp = employees.value.find(e => e.id === id);
+    return emp ? `${emp.nombre} ${emp.apellido}` : '';
+  };
+  
+  // Lifecycle
+  onMounted(async () => {
+    await loadEmployees();
+  });
+  </script>
+  
+  <style scoped>
+  .empleados-container {
+    background-color: var(--light-bg);
+    min-height: 100vh;
+    font-family: 'Nunito', sans-serif;
+  }
+  </style>
