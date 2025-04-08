@@ -18,143 +18,25 @@
     <!-- Lista de empleados -->
     <div v-else class="employees-grid">
       <EmployeeCard 
-  v-for="employee in employees" 
-  :key="employee.id" 
-  :employee="employee"
-  @edit="openEditForm(employee)" 
-  @show-calendar="$emit('show-calendar', employee.id)"
-  @delete="prepareDelete"
-/>
+        v-for="employee in employees" 
+        :key="employee.id" 
+        :employee="employee"
+        @edit="$emit('edit', employee)" 
+        @show-calendar="$emit('show-calendar', employee.id)"
+        @delete="$emit('delete', employee)"
+      />
     </div>
   </main>
-
-  <!-- Modal de confirmación -->
-  <div v-if="showConfirmModal" class="modal-overlay" @click.self="cancelDelete">
-    <div class="modal fade-in">
-      <h3>¿Eliminar empleado?</h3>
-      <p>Estás a punto de eliminar a <strong>{{ employeeToDelete?.nombre }} {{ employeeToDelete?.apellido }}</strong>.</p>
-      <p>¿Estás seguro de que deseas continuar?</p>
-      <div class="modal-actions">
-        <button class="cancel-btn" @click="cancelDelete">Cancelar</button>
-        <button class="confirm-btn" @click="confirmDelete">Sí, Eliminar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Formulario de empleado -->
-  <EmployeeForm 
-    v-if="showForm" 
-    :show="showForm" 
-    :isEditing="isEditing" 
-    :formData="selectedEmployee" 
-    :labels="formLabels" 
-    :requiredFields="requiredFields"
-    @submit="handleFormSubmit" 
-    @update:show="showForm = $event"
-  />
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { invoke } from "@tauri-apps/api/core";
+import { defineProps } from 'vue';
 import EmployeeCard from './EmployeeCard.vue';
-import EmployeeForm from './EmployeeForm.vue';
 
-const employees = ref([]);
-const showConfirmModal = ref(false);
-const employeeToDelete = ref(null);
-const selectedEmployee = ref(null); // Empleado seleccionado para editar
-const showForm = ref(false); // Controlar la visibilidad del formulario
-const isEditing = ref(false); // Indicar si estamos en modo edición
-const formLabels = ref({}); // Etiquetas del formulario
-const requiredFields = ref([]); // Campos requeridos
-
-// Cargar empleados
-const loadEmployees = async () => {
-  try {
-    employees.value = await invoke('get_employees');
-  } catch (error) {
-    console.error('Error al cargar empleados:', error);
-  }
-};
-
-onMounted(loadEmployees);
-
-// Preparar eliminación
-const prepareDelete = (employee) => {
-  employeeToDelete.value = employee;
-  showConfirmModal.value = true;
-};
-
-// Confirmar eliminación
-const confirmDelete = async () => {
-  if (!employeeToDelete.value) return;
-  
-  try {
-    const success = await invoke('delete_employee', { 
-      id: employeeToDelete.value.id // Asegúrate de que el backend reciba el id
-    });
-    
-    if (success) {
-      // Eliminar el empleado de la lista local
-      employees.value = employees.value.filter(
-        e => e.id !== employeeToDelete.value.id
-      );
-    } else {
-      console.error('No se pudo eliminar el empleado');
-    }
-  } catch (error) {
-    console.error('Error al eliminar empleado:', error);
-  } finally {
-    showConfirmModal.value = false;
-    employeeToDelete.value = null;
-  }
-};
-
-// Cancelar eliminación
-const cancelDelete = () => {
-  showConfirmModal.value = false;
-  employeeToDelete.value = null;
-};
-
-// Abrir formulario de edición
-const openEditForm = (employee) => {
-  selectedEmployee.value = { ...employee }; // Copiar los datos del empleado seleccionado
-  isEditing.value = true; // Activar modo edición
-  showForm.value = true; // Mostrar el formulario
-};
-
-// Manejar envío del formulario
-const handleFormSubmit = async (employeeData) => {
-  if (isEditing.value) {
-    // Actualizar empleado existente
-    try {
-      const response = await invoke('update_employee', employeeData);
-      console.log('Empleado actualizado:', response);
-
-      // Actualizar la lista local de empleados
-      const index = employees.value.findIndex(e => e.id === employeeData.id);
-      if (index !== -1) {
-        employees.value[index] = { ...employeeData };
-      }
-    } catch (error) {
-      console.error('Error al actualizar empleado:', error);
-    }
-  } else {
-    // Crear nuevo empleado (si es necesario)
-    try {
-      const response = await invoke('create_employee', employeeData);
-      console.log('Empleado creado:', response);
-
-      // Recargar la lista de empleados
-      await loadEmployees();
-    } catch (error) {
-      console.error('Error al crear empleado:', error);
-    }
-  }
-
-  showForm.value = false; // Cerrar el formulario
-};
+defineProps({
+  employees: Array, // Recibe la lista de empleados filtrados
+  loading: Boolean
+});
 </script>
 
 <style scoped>

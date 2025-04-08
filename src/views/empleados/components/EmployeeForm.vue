@@ -9,7 +9,7 @@
             </button>
           </div>
   
-          <form @submit.prevent="$emit('submit')" class="employee-form">
+          <form @submit.prevent="handleSubmit" class="employee-form">
             <div class="form-group" v-for="(value, key) in formData" :key="key">
               <label :for="key">{{ labels[key] }}</label>
               <input 
@@ -50,21 +50,25 @@
     requiredFields: Array
   });
   
-  const handleSubmit = async () => {
-    const newEmployee = {
-      ...formData, // Copiar los datos del formulario
-      id: formData.id || Date.now() // Generar un ID único si no existe
-    };
-    console.log('Datos enviados desde el formulario:', newEmployee); // Depuración
-    emit('submit', newEmployee); // Emitir los datos del empleado
-    close(); // Cerrar el formulario
-  };
-  
   const emit = defineEmits(['update:show', 'submit', 'update:formData', 'close']);
   
   const close = () => {
     emit('update:show', false);
     emit('close');
+  };
+  
+  // Observar cambios en formData y emitirlos
+  watch(() => props.formData, (newVal) => {
+    emit('update:formData', newVal);
+  }, { deep: true });
+  
+  const handleSubmit = async () => {
+    const newEmployee = {
+      ...props.formData,
+      id: props.formData.id || Date.now()
+    };
+    emit('submit', newEmployee); // Enviar los datos completos al componente padre
+    close();
   };
   </script>
   
