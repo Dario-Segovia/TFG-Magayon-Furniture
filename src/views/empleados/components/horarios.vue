@@ -646,7 +646,7 @@ textarea.modern-input {
 }
 
 .cancel-btn:hover {
-  background-color: #f8f9fa;
+  background-color: #dc2626;
 }
 
 .submit-btn {
@@ -676,7 +676,7 @@ textarea.modern-input {
 }
 
 .delete-btn:hover {
-  background-color: #c03425;
+  background-color: #dc2626;
 }
 
 .edit-btn {
@@ -1018,7 +1018,7 @@ textarea.modern-input {
 }
 
 .cancel-btn:hover {
-  background-color: #e5e7eb;
+  background-color: #dc2626;
 }
 
 .submit-btn {

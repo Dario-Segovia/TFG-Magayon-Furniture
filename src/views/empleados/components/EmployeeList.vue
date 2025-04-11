@@ -14,7 +14,7 @@
         <i class="fas fa-user-plus"></i> Agregar Empleado
       </button>
     </div>
-
+    
     <!-- Lista de empleados -->
     <div v-else class="employees-grid">
       <EmployeeCard 
@@ -27,6 +27,8 @@
       />
     </div>
   </main>
+  
+  
 </template>
 
 <script setup>
@@ -197,4 +199,6 @@ defineProps({
     grid-template-columns: 1fr;
   }
 }
+
+
 </style>

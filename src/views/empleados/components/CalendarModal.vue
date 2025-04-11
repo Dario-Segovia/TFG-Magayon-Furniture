@@ -184,8 +184,10 @@
 }
 
 .cancel-btn:hover {
-  background-color: #f8f9fa;
+  background-color: #dc2626;
+ 
   transform: scale(1.05);
+  
 }
 
 .submit-btn {

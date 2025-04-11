@@ -176,7 +176,7 @@
   }
   
   .cancel-btn:hover {
-    background-color: #f8f9fa;
+    background-color: #dc2626;
   }
   
   .submit-btn {
@@ -214,4 +214,5 @@
       text-align: center;
     }
   }
+  
   </style>

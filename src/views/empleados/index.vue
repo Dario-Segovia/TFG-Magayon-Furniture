@@ -15,6 +15,7 @@
       :loading="loading"
       @edit="openEditForm"
       @show-calendar="openEmployeeCalendar"
+      @delete="prepareDelete"
     />
     
     <EmployeeForm
@@ -33,6 +34,13 @@
       :employee-name="getEmployeeName(selectedEmployeeId)"
       @close="closeCalendar"
     />
+    
+    <ConfirmModal
+      v-model:show="showDeleteModal"
+      :employee-name="employeeToDeleteName"
+      @close="closeDeleteModal"
+      @confirm="confirmDelete"
+    />
   </div>
 </template>
 
@@ -44,6 +52,7 @@ import EmployeeSearch from './components/EmployeeSearch.vue';
 import EmployeeList from './components/EmployeeList.vue';
 import EmployeeForm from './components/EmployeeForm.vue';
 import CalendarModal from './components/CalendarModal.vue';
+import ConfirmModal from './components/ConfirmModal.vue';
 
 const loading = ref(true);
 const employees = ref([]);
@@ -53,6 +62,14 @@ const isEditing = ref(false);
 const currentEmployeeId = ref(null);
 const showCalendar = ref(false);
 const selectedEmployeeId = ref(null);
+const showDeleteModal = ref(false);
+const employeeToDelete = ref(null);
+
+const employeeToDeleteName = computed(() => {
+  return employeeToDelete.value 
+    ? `${employeeToDelete.value.nombre} ${employeeToDelete.value.apellido}`
+    : '';
+});
 
 const labels = {
   nombre: 'Nombre',
@@ -66,6 +83,30 @@ const labels = {
 
 const requiredFields = ['nombre', 'apellido', 'email', 'puesto', 'fecha_contratacion'];
 
+const prepareDelete = (employee) => {
+  employeeToDelete.value = employee;
+  showDeleteModal.value = true;
+};
+
+const confirmDelete = async () => {
+  if (!employeeToDelete.value) return;
+  
+  try {
+    await invoke('delete_employee', { id: employeeToDelete.value.id });
+    await loadEmployees();
+    closeDeleteModal();
+  } catch (error) {
+    console.error('Error al eliminar empleado:', error);
+    alert('Error al eliminar empleado');
+  }
+};
+
+const closeDeleteModal = () => {
+  showDeleteModal.value = false;
+  employeeToDelete.value = null;
+};
+
+// Resto del código se mantiene igual...
 const formData = ref({
   nombre: '',
   apellido: '',
