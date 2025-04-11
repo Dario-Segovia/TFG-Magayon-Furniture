@@ -2,9 +2,9 @@
 
 use bcrypt::verify;
 use sqlx::{postgres::PgPoolOptions, PgPool};
-use std::env;
 use tauri::State;
 use dotenvy::dotenv;
+use dotenvy_macro::dotenv;
 
 mod empleados;
 mod horarios;
@@ -41,7 +41,7 @@ async fn main() {
     dotenv().ok();
     
     // Obtiene la URL de la base de datos desde las variables de entorno
-    let db_url = env::var("DATABASE_URL").expect("DATABASE_URL not set in .env file");
+    let db_url = dotenv!("DATABASE_URL"); // Aquí se usa la macro dotenvy_macro
 
     // Establece la conexión con la base de datos PostgreSQL
     let pool = PgPoolOptions::new()

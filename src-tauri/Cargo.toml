@@ -31,4 +31,5 @@ dotenvy = "0.15"
 sqlx = { version = "0.7", features = ["postgres", "runtime-tokio-native-tls", "bigdecimal", "chrono"] }
 chrono = { version = "0.4", features = ["serde"] }
 bigdecimal = { version = "0.4", features = ["serde"] }
+dotenvy_macro = "0.15"
 

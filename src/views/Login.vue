@@ -15,7 +15,9 @@
         :class="{ active: locale === 'en' }"
       />
     </div>
-
+    <div v-if="isLoading" class="loading-overlay">
+    <div class="spinner"></div>
+  </div>
     <!-- Cuadro de login -->
     <div class="login-card">
       <h2>{{ $t('login.title') }}</h2>
@@ -43,6 +45,8 @@ const password = ref('');
 const rol = ref('');
 const error = ref('');
 const router = useRouter();
+const isLoading = ref(false);
+
 
 const { locale } = useI18n();
 
@@ -60,6 +64,7 @@ onMounted(() => {
 
 
 async function login() {
+  isLoading.value = true;  // Activar el estado de carga
   try {
     // Llamada a la función de backend para autenticar al usuario
     const result = await invoke('login', { usuario: usuario.value, password: password.value });
@@ -71,17 +76,14 @@ async function login() {
 
     // Redirige al home después de un login exitoso
     if (result === 'admin') {
-      // Si el rol es 'admin', redirige a la vista admin
       router.push({ name: 'home' });
     } else if (result === 'empleado') {
-      // Si el rol es 'empleado', redirige a la vista home de empleado
       router.push({ name: 'home' });
     } else {
-      // Si el rol no es válido, mostrar un error
       error.value = 'Rol no válido';
     }
   } catch (err) {
-    // Si ocurre un error en el login, mostrar mensaje de error
+    // Manejo de errores
     if (err === 'Usuario no encontrado') {
       error.value = 'Usuario no encontrado';
     } else if (err === 'Credenciales incorrectas') {
@@ -89,6 +91,8 @@ async function login() {
     } else {
       error.value = 'Error en el servidor';
     }
+  } finally {
+    isLoading.value = false;  // Desactivar el estado de carga
   }
 }
 
@@ -219,5 +223,33 @@ button:hover {
     align-items: flex-start;
     padding-top: 4rem;
   }
+}
+
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 20;
+}
+
+.spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>
