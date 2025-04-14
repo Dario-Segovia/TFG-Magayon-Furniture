@@ -1,14 +1,14 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+#[warn(dead_code)]
 
 use bcrypt::verify;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use tauri::State;
-use dotenvy::dotenv;
-use dotenvy_macro::dotenv;
 
+mod build;
 mod empleados;
 mod horarios;
-
+mod clientes;   
 // -----------------------------
 // FUNCIONES DE LOGIN
 // -----------------------------
@@ -37,12 +37,8 @@ async fn login(usuario: String, password: String, pool: State<'_, PgPool>) -> Re
 
 #[tokio::main]
 async fn main() {
-    // Carga las variables de entorno desde el archivo .env
-    dotenv().ok();
     
-    // Obtiene la URL de la base de datos desde las variables de entorno
-    let db_url = dotenv!("DATABASE_URL"); // Aquí se usa la macro dotenvy_macro
-
+    let db_url = env!("DATABASE_URL").to_string();
     // Establece la conexión con la base de datos PostgreSQL
     let pool = PgPoolOptions::new()
         .max_connections(5)
@@ -64,6 +60,18 @@ async fn main() {
             horarios::create_horario,
             horarios::update_horario,
             horarios::delete_horario,
+            clientes::crear_cliente,
+            clientes::obtener_clientes,
+            clientes::obtener_cliente_por_id,
+            clientes::eliminar_cliente,
+            clientes::actualizar_cliente,
+            clientes::crear_cliente
+            
+            
+
+
+
+            
         ])
         // Inicia la aplicación Tauri
         .run(tauri::generate_context!())

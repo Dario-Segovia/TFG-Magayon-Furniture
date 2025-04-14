@@ -3,7 +3,7 @@ import Login from '../views/Login.vue';
 import Home from '../views/Home.vue';
 import Empleados from '../views/empleados/index.vue';
 import Inventario from '../views/Inventario.vue';
-import Clientes from '../views/Clientes.vue';
+import Clientes from '../views/clientes/index.vue';
 import Ordenes from '../views/Ordenes.vue';
 import Proveedores from '../views/Proveedores.vue';
 import Conversiones from '../views/Conversiones.vue';
