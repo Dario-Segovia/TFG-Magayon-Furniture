@@ -9,6 +9,8 @@ mod build;
 mod empleados;
 mod horarios;
 mod clientes;   
+mod proveedores;
+
 // -----------------------------
 // FUNCIONES DE LOGIN
 // -----------------------------
@@ -65,7 +67,19 @@ async fn main() {
             clientes::obtener_cliente_por_id,
             clientes::eliminar_cliente,
             clientes::actualizar_cliente,
-            clientes::crear_cliente
+            clientes::crear_cliente,
+            proveedores::crear_proveedor,
+            proveedores::obtener_proveedores,
+            proveedores::actualizar_proveedor,
+            proveedores::eliminar_proveedor,
+            proveedores::agregar_producto_proveedor,
+            proveedores::obtener_productos_proveedor,
+            proveedores::eliminar_producto_proveedor,
+           
+            
+           
+
+
             
             
 

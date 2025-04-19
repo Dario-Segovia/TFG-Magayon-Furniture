@@ -32,7 +32,18 @@
             class="clientes-table-row"
           >
             <td class="clientes-table-cell">{{ cliente.nombre }}</td>
-            <td class="clientes-table-cell">{{ cliente.email }}</td>
+            <td class="clientes-table-cell">
+              {{ cliente.email }}
+              <button 
+                class="clientes-btn-icon clientes-btn-email" 
+                @click="enviarEmail(cliente.email)"
+                title="Enviar correo"
+              >
+                <svg class="clientes-icon" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M2.94 4.94A2 2 0 014 4h12a2 2 0 011.06.94l-7.06 4.24L2.94 4.94zM2 6.8v8.4A2 2 0 004 17h12a2 2 0 002-1.8V6.8l-7.06 4.24a1 1 0 01-1.88 0L2 6.8z" />
+                </svg>
+              </button>
+            </td>
             <td class="clientes-table-cell">
               {{ cliente.telefono }}
               <button 
@@ -204,6 +215,11 @@
     const mensaje = `Hola ${cliente.nombre}, me gustaría ponerme en contacto contigo.`;
     const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
     window.open(url, '_blank');
+  };
+
+  const enviarEmail = (email) => {
+    const mailtoLink = `mailto:${email}`;
+    window.open(mailtoLink, '_blank');
   };
   
   const clientesFiltrados = computed(() =>
@@ -386,6 +402,14 @@
   
   .clientes-btn-whatsapp:hover {
     color: #128c7e; /* Verde más oscuro */
+  }
+
+  .clientes-btn-email {
+    color: #2563eb; /* Azul */
+  }
+
+  .clientes-btn-email:hover {
+    color: #1d4ed8; /* Azul más oscuro */
   }
   
  /* Estilos mejorados para los modales */

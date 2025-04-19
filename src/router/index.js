@@ -5,7 +5,7 @@ import Empleados from '../views/empleados/index.vue';
 import Inventario from '../views/Inventario.vue';
 import Clientes from '../views/clientes/index.vue';
 import Ordenes from '../views/Ordenes.vue';
-import Proveedores from '../views/Proveedores.vue';
+import Proveedores from '../views/proveedores/index.vue';
 import Conversiones from '../views/Conversiones.vue';
 import Estadisticas from '../views/Estadisticas.vue';
 
