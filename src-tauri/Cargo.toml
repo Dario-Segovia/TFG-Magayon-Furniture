@@ -6,12 +6,7 @@ authors = ["you"]
 edition = "2021"
 build = "build.rs"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [lib]
-# The `_lib` suffix may seem redundant but it is necessary
-# to make the lib name unique and wouldn't conflict with the bin name.
-# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
 name = "magayon_furniture_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
@@ -29,8 +24,7 @@ tokio-postgres = "0.7.13"
 axum = "0.8.3"
 tower = "0.4"
 dotenvy = "0.15"
-sqlx = { version = "0.7", features = ["postgres", "runtime-tokio-native-tls", "bigdecimal", "chrono"] }
+sqlx = { version = "0.7", features = ["postgres", "runtime-tokio-native-tls", "chrono","rust_decimal"] } # <--- QUITADO "decimal"
 chrono = { version = "0.4", features = ["serde"] }
-bigdecimal = { version = "0.4", features = ["serde"] }
+rust_decimal = { version = "1", features = ["serde"] } # <--- SOLO este es necesario para Decimal
 dotenvy_macro = "0.15"
-

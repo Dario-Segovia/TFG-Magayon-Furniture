@@ -1,32 +1,39 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 #[warn(dead_code)]
-
 use bcrypt::verify;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use tauri::State;
 
 mod build;
+mod clientes;
 mod empleados;
 mod horarios;
-mod clientes;   
 mod proveedores;
+mod inventario;
 
 // -----------------------------
 // FUNCIONES DE LOGIN
 // -----------------------------
 
 #[tauri::command]
-async fn login(usuario: String, password: String, pool: State<'_, PgPool>) -> Result<String, String> {
+async fn login(
+    usuario: String,
+    password: String,
+    pool: State<'_, PgPool>,
+) -> Result<String, String> {
     // Consulta el usuario y la contraseña cifrada en la base de datos
-    let row: (String, String) = sqlx::query_as("SELECT password, rol FROM public.usuarios WHERE usuario = $1")
-        .bind(&usuario)
-        .fetch_one(&*pool)
-        .await
-        .map_err(|e| format!("Usuario no encontrado o error en la consulta: {}", e))?;
+    let row: (String, String) =
+        sqlx::query_as("SELECT password, rol FROM public.usuarios WHERE usuario = $1")
+            .bind(&usuario)
+            .fetch_one(&*pool)
+            .await
+            .map_err(|e| format!("Usuario no encontrado o error en la consulta: {}", e))?;
 
     // Desencripta la contraseña y compara
     let (hashed_password, rol) = row;
-    if verify(&password, &hashed_password).map_err(|e| format!("Error al verificar la contraseña: {}", e))? {
+    if verify(&password, &hashed_password)
+        .map_err(|e| format!("Error al verificar la contraseña: {}", e))?
+    {
         Ok(rol) // Retorna el rol si la contraseña es correcta
     } else {
         Err("Credenciales incorrectas".to_string()) // Si la contraseña es incorrecta
@@ -39,7 +46,6 @@ async fn login(usuario: String, password: String, pool: State<'_, PgPool>) -> Re
 
 #[tokio::main]
 async fn main() {
-    
     let db_url = env!("DATABASE_URL").to_string();
     // Establece la conexión con la base de datos PostgreSQL
     let pool = PgPoolOptions::new()
@@ -75,17 +81,12 @@ async fn main() {
             proveedores::agregar_producto_proveedor,
             proveedores::obtener_productos_proveedor,
             proveedores::eliminar_producto_proveedor,
-           
-            
-           
-
-
-            
-            
-
-
-
-            
+            // Comandos de inventario
+            inventario::get_inventory,
+            inventario::get_inventory_item,
+            inventario::add_inventory_item,
+            inventario::update_inventory_item,
+            inventario::delete_inventory_item,
         ])
         // Inicia la aplicación Tauri
         .run(tauri::generate_context!())

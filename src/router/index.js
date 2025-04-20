@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import Login from '../views/Login.vue';
 import Home from '../views/Home.vue';
 import Empleados from '../views/empleados/index.vue';
-import Inventario from '../views/Inventario.vue';
+import Inventario from '../views/inventario/index.vue';
 import Clientes from '../views/clientes/index.vue';
 import Ordenes from '../views/Ordenes.vue';
 import Proveedores from '../views/proveedores/index.vue';
