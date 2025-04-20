@@ -1,8 +1,7 @@
 use sqlx::{PgPool, Row, postgres::PgRow};
 use tauri::State;
 use serde::{Serialize, Deserialize};
-use rust_decimal::Decimal; // ← CAMBIADO aquí
-// Removed incorrect import for Decimal
+use rust_decimal::Decimal;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct InventarioItem {
@@ -10,8 +9,19 @@ pub struct InventarioItem {
     pub nombre: String,
     pub descripcion: Option<String>,
     pub cantidad: i32,
-    pub precio_unitario: Decimal, // ← CAMBIADO aquí
+    #[serde(alias = "precioUnitario")]
+    pub precio_unitario: Decimal,
     pub categoria: Option<String>,
+}
+
+#[derive(Deserialize)]
+pub struct InventoryItemInput {
+    nombre: String,
+    descripcion: Option<String>,
+    cantidad: i32,
+    #[serde(alias = "precioUnitario")]
+    precio_unitario: Decimal,
+    categoria: Option<String>,
 }
 
 #[tauri::command]
@@ -57,21 +67,17 @@ pub async fn get_inventory_item(id: i32, pool: State<'_, PgPool>) -> Result<Inve
 
 #[tauri::command]
 pub async fn add_inventory_item(
-    nombre: String,
-    descripcion: Option<String>,
-    cantidad: i32,
-    precio_unitario: Decimal,
-    categoria: Option<String>,
+    item: InventoryItemInput,
     pool: State<'_, PgPool>,
 ) -> Result<(), String> {
     let query = "INSERT INTO public.inventario (nombre, descripcion, cantidad, precio_unitario, categoria) VALUES ($1, $2, $3, $4, $5)";
 
     sqlx::query(query)
-        .bind(nombre)
-        .bind(descripcion)
-        .bind(cantidad)
-        .bind(precio_unitario) // No conversion needed
-        .bind(categoria)
+        .bind(item.nombre)
+        .bind(item.descripcion)
+        .bind(item.cantidad)
+        .bind(item.precio_unitario)
+        .bind(item.categoria)
         .execute(&*pool)
         .await
         .map_err(|e| e.to_string())?;
@@ -80,23 +86,20 @@ pub async fn add_inventory_item(
 }
 
 #[tauri::command]
+
 pub async fn update_inventory_item(
     id: i32,
-    nombre: String,
-    descripcion: Option<String>,
-    cantidad: i32,
-    precio_unitario: Decimal,
-    categoria: Option<String>,
+    item: InventoryItemInput,  // Usamos la misma estructura que para add
     pool: State<'_, PgPool>,
 ) -> Result<(), String> {
     let query = "UPDATE public.inventario SET nombre = $1, descripcion = $2, cantidad = $3, precio_unitario = $4, categoria = $5 WHERE id = $6";
 
     sqlx::query(query)
-        .bind(nombre)
-        .bind(descripcion)
-        .bind(cantidad)
-        .bind(precio_unitario) // ← CONVERSIÓN necesaria
-        .bind(categoria)
+        .bind(item.nombre)
+        .bind(item.descripcion)
+        .bind(item.cantidad)
+        .bind(item.precio_unitario)
+        .bind(item.categoria)
         .bind(id)
         .execute(&*pool)
         .await

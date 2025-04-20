@@ -1,5 +1,5 @@
 <template>
-  <div class="modal-overlay" @click.self="$emit('close')">
+  <div class="modal-overlay">
     <div class="modal-container fade-in">
       <div class="modal-header">
         <h2>Nuevo Ítem</h2>
@@ -26,15 +26,6 @@
           <div class="form-group">
             <label>Categoría</label>
             <input v-model="categoria" class="form-input" />
-          </div>
-          <div class="form-group">
-            <label>Proveedor</label>
-            <select v-model="id_proveedor" class="form-input">
-              <option value="">Sin proveedor</option>
-              <option v-for="prov in proveedores" :key="prov.id" :value="prov.id">
-                {{ prov.nombre }}
-              </option>
-            </select>
           </div>
           <div class="form-actions">
             <button type="button" @click="$emit('close')" class="btn btn-secondary">Cancelar</button>

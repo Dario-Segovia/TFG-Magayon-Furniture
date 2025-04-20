@@ -110,11 +110,13 @@ const agregarItem = async (nuevo) => {
   console.log('Intentando agregar ítem:', nuevo);
   try {
     await invoke('add_inventory_item', {
-      nombre: nuevo.nombre,
-      descripcion: nuevo.descripcion,
-      cantidad: nuevo.cantidad,
-      precio_unitario: nuevo.precio_unitario,
-      categoria: nuevo.categoria,
+      item: {  // Envía los parámetros dentro de un objeto "item"
+        nombre: nuevo.nombre,
+        descripcion: nuevo.descripcion,
+        cantidad: nuevo.cantidad,
+        precio_unitario: nuevo.precio_unitario,
+        categoria: nuevo.categoria,
+      }
     });
     console.log('Ítem agregado correctamente');
     showAgregar.value = false;
@@ -134,11 +136,13 @@ const editarItem = async (editado) => {
   try {
     await invoke('update_inventory_item', {
       id: editado.id,
-      nombre: editado.nombre,
-      descripcion: editado.descripcion,
-      cantidad: editado.cantidad,
-      precio_unitario: editado.precio_unitario,
-      categoria: editado.categoria,
+      item: {  // Envía los demás campos dentro de un objeto 'item'
+        nombre: editado.nombre,
+        descripcion: editado.descripcion,
+        cantidad: editado.cantidad,
+        precio_unitario: editado.precio_unitario,
+        categoria: editado.categoria
+      }
     });
     console.log('Ítem editado correctamente');
     itemEditar.value = null;

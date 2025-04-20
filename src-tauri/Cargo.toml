@@ -24,7 +24,7 @@ tokio-postgres = "0.7.13"
 axum = "0.8.3"
 tower = "0.4"
 dotenvy = "0.15"
-sqlx = { version = "0.7", features = ["postgres", "runtime-tokio-native-tls", "chrono","rust_decimal"] } # <--- QUITADO "decimal"
+sqlx = { version = "0.7", features = ["postgres", "runtime-tokio-native-tls", "chrono", "rust_decimal"] } # <--- QUITADO "decimal"
 chrono = { version = "0.4", features = ["serde"] }
 rust_decimal = { version = "1", features = ["serde"] } # <--- SOLO este es necesario para Decimal
 dotenvy_macro = "0.15"

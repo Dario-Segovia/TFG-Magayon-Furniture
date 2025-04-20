@@ -1,5 +1,5 @@
 <template>
-  <div class="modal-overlay" @click.self="$emit('close')">
+  <div class="modal-overlay">
     <div class="modal-container fade-in">
       <div class="modal-header">
         <h2>Editar Ítem</h2>
@@ -58,6 +58,7 @@ watch(() => props.item, (val) => {
 
 const guardar = () => {
   emit('save', {
+    id: props.item.id,  // Asegúrate de incluir el ID
     nombre: nombre.value,
     descripcion: descripcion.value,
     cantidad: cantidad.value,
