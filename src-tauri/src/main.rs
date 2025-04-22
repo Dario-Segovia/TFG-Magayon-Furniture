@@ -3,6 +3,8 @@
 use bcrypt::verify;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use tauri::State;
+use std::env;
+use dotenvy::dotenv;
 
 mod build;
 mod clientes;
@@ -46,7 +48,11 @@ async fn login(
 
 #[tokio::main]
 async fn main() {
-    let db_url = env!("DATABASE_URL").to_string();
+    dotenv().ok(); // Carga las variables desde el archivo .env
+    // Lee la variable de entorno en tiempo de ejecución
+    let db_url = env::var("DATABASE_URL")
+        .expect("DATABASE_URL no está definida en las variables de entorno");
+
     // Establece la conexión con la base de datos PostgreSQL
     let pool = PgPoolOptions::new()
         .max_connections(5)
@@ -73,7 +79,6 @@ async fn main() {
             clientes::obtener_cliente_por_id,
             clientes::eliminar_cliente,
             clientes::actualizar_cliente,
-            clientes::crear_cliente,
             proveedores::crear_proveedor,
             proveedores::obtener_proveedores,
             proveedores::actualizar_proveedor,

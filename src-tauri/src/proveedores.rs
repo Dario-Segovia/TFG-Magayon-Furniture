@@ -1,8 +1,8 @@
 use tauri::State;
-use sqlx::PgPool;
+use sqlx::{PgPool, FromRow};
 use serde::{Serialize, Deserialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, FromRow)]
 pub struct Proveedor {
     pub id: Option<i32>, // Cambiado a Option<i32> para que sea opcional
     pub nombre: String,
@@ -15,7 +15,7 @@ pub struct Proveedor {
     pub contrato_vigente: Option<bool>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, FromRow)]
 pub struct ProductoProveedor {
     pub id: Option<i32>, 
     #[serde(alias = "proveedorId")] // Acepta proveedorId (camelCase) del frontend
@@ -30,20 +30,20 @@ pub async fn crear_proveedor(
 ) -> Result<(), String> {
     println!("Datos recibidos para crear proveedor: {:?}", proveedor);
 
-    sqlx::query!(
+    sqlx::query(
         r#"
         INSERT INTO proveedores (nombre, contacto, telefono, email, direccion, pais, estado, contrato_vigente)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         "#,
-        proveedor.nombre,
-        proveedor.contacto,
-        proveedor.telefono,
-        proveedor.email,
-        proveedor.direccion,
-        proveedor.pais,
-        proveedor.estado.unwrap_or_else(|| "activo".to_string()),
-        proveedor.contrato_vigente.unwrap_or(false)
     )
+    .bind(&proveedor.nombre)
+    .bind(&proveedor.contacto)
+    .bind(&proveedor.telefono)
+    .bind(&proveedor.email)
+    .bind(&proveedor.direccion)
+    .bind(&proveedor.pais)
+    .bind(proveedor.estado.unwrap_or_else(|| "activo".to_string()))
+    .bind(proveedor.contrato_vigente.unwrap_or(false))
     .execute(&*pool)
     .await
     .map_err(|e| {
@@ -59,13 +59,12 @@ pub async fn crear_proveedor(
 pub async fn obtener_proveedores(pool: State<'_, PgPool>) -> Result<Vec<Proveedor>, String> {
     println!("Obteniendo lista de proveedores...");
 
-    let proveedores = sqlx::query_as!(
-        Proveedor,
+    let proveedores = sqlx::query_as::<_, Proveedor>( 
         r#"
         SELECT id, nombre, contacto, telefono, email, direccion, pais, estado, contrato_vigente
         FROM proveedores
         ORDER BY nombre ASC
-        "#
+        "#,
     )
     .fetch_all(&*pool)
     .await
@@ -86,22 +85,22 @@ pub async fn actualizar_proveedor(
 ) -> Result<(), String> {
     println!("Datos recibidos para actualizar proveedor: id = {}, datos = {:?}", id, proveedor);
 
-    sqlx::query!(
+    sqlx::query(
         r#"
         UPDATE proveedores
         SET nombre = $1, contacto = $2, telefono = $3, email = $4, direccion = $5, pais = $6, estado = $7, contrato_vigente = $8
         WHERE id = $9
         "#,
-        proveedor.nombre,
-        proveedor.contacto,
-        proveedor.telefono,
-        proveedor.email,
-        proveedor.direccion,
-        proveedor.pais,
-        proveedor.estado.unwrap_or_else(|| "activo".to_string()),
-        proveedor.contrato_vigente.unwrap_or(false),
-        id
     )
+    .bind(&proveedor.nombre)
+    .bind(&proveedor.contacto)
+    .bind(&proveedor.telefono)
+    .bind(&proveedor.email)
+    .bind(&proveedor.direccion)
+    .bind(&proveedor.pais)
+    .bind(proveedor.estado.unwrap_or_else(|| "activo".to_string()))
+    .bind(proveedor.contrato_vigente.unwrap_or(false))
+    .bind(id)
     .execute(&*pool)
     .await
     .map_err(|e| {
@@ -117,13 +116,13 @@ pub async fn actualizar_proveedor(
 pub async fn eliminar_proveedor(pool: State<'_, PgPool>, id: i32) -> Result<(), String> {
     println!("Eliminando proveedor con id = {}", id);
 
-    sqlx::query!(
+    sqlx::query(
         r#"
         DELETE FROM proveedores
         WHERE id = $1
         "#,
-        id
     )
+    .bind(id)
     .execute(&*pool)
     .await
     .map_err(|e| {
@@ -142,14 +141,14 @@ pub async fn agregar_producto_proveedor(
 ) -> Result<(), String> {
     println!("Datos recibidos para agregar producto a proveedor: {:?}", producto);
 
-    sqlx::query!(
+    sqlx::query(
         r#"
         INSERT INTO proveedor_productos (proveedor_id, producto)
         VALUES ($1, $2)
         "#,
-        producto.proveedor_id,
-        producto.producto
     )
+    .bind(producto.proveedor_id)
+    .bind(&producto.producto)
     .execute(&*pool)
     .await
     .map_err(|e| {
@@ -166,16 +165,15 @@ pub async fn obtener_productos_proveedor(
     pool: State<'_, PgPool>,
     proveedor_id: i32,
 ) -> Result<Vec<ProductoProveedor>, String> {
-    let productos = sqlx::query_as!(
-        ProductoProveedor,
+    let productos = sqlx::query_as::<_, ProductoProveedor>(
         r#"
         SELECT id, proveedor_id, producto
         FROM proveedor_productos
         WHERE proveedor_id = $1
         ORDER BY producto ASC
         "#,
-        proveedor_id
     )
+    .bind(proveedor_id)
     .fetch_all(&*pool)
     .await
     .map_err(|e| {
@@ -191,13 +189,13 @@ pub async fn obtener_productos_proveedor(
 pub async fn eliminar_producto_proveedor(pool: State<'_, PgPool>, id: i32) -> Result<(), String> {
     println!("Eliminando producto con id = {}", id);
 
-    sqlx::query!(
+    sqlx::query(
         r#"
         DELETE FROM proveedor_productos
         WHERE id = $1
         "#,
-        id
     )
+    .bind(id)
     .execute(&*pool)
     .await
     .map_err(|e| {
@@ -208,4 +206,3 @@ pub async fn eliminar_producto_proveedor(pool: State<'_, PgPool>, id: i32) -> Re
     println!("Producto eliminado correctamente: id = {}", id);
     Ok(())
 }
-

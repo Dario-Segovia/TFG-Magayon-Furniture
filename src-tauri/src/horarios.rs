@@ -43,20 +43,20 @@ pub async fn get_horarios(pool: State<'_, PgPool>) -> Result<Vec<Horario>, Strin
 
 #[tauri::command]
 pub async fn create_horario(pool: State<'_, PgPool>, horario: NuevoHorario) -> Result<(), String> {
-    println!("Datos recibidos: {:?}", horario); // 👈 Añade esto para depurar
+    println!("Datos recibidos: {:?}", horario);
 
-    sqlx::query!(
+    sqlx::query(
         r#"
         INSERT INTO horarios (empleado_id, fecha, hora_inicio, hora_fin, tipo_turno, notas)
         VALUES ($1, $2, $3, $4, $5, $6)
         "#,
-        horario.empleado_id, // Asegúrate de que esto se está recibiendo
-        horario.fecha,
-        horario.hora_inicio,
-        horario.hora_fin,
-        horario.tipo_turno,
-        horario.notas
     )
+    .bind(horario.empleado_id)
+    .bind(horario.fecha)
+    .bind(horario.hora_inicio)
+    .bind(horario.hora_fin)
+    .bind(horario.tipo_turno)
+    .bind(horario.notas)
     .execute(&*pool)
     .await
     .map_err(|e| format!("Error al crear horario: {}", e))?;
@@ -66,36 +66,37 @@ pub async fn create_horario(pool: State<'_, PgPool>, horario: NuevoHorario) -> R
 
 #[tauri::command]
 pub async fn update_horario(pool: State<'_, PgPool>, id: i32, horario: NuevoHorario) -> Result<(), String> {
-    println!("Datos recibidos para actualizar: id = {}, horario = {:?}", id, horario); // 👈 Log para depurar
+    println!("Datos recibidos para actualizar: id = {}, horario = {:?}", id, horario);
 
-    sqlx::query!(
+    sqlx::query(
         r#"
         UPDATE horarios
         SET empleado_id = $1, fecha = $2, hora_inicio = $3, hora_fin = $4, tipo_turno = $5, notas = $6
         WHERE id = $7
         "#,
-        horario.empleado_id,
-        horario.fecha,
-        horario.hora_inicio,
-        horario.hora_fin,
-        horario.tipo_turno,
-        horario.notas,
-        id
     )
+    .bind(horario.empleado_id)
+    .bind(horario.fecha)
+    .bind(horario.hora_inicio)
+    .bind(horario.hora_fin)
+    .bind(horario.tipo_turno)
+    .bind(horario.notas)
+    .bind(id)
     .execute(&*pool)
     .await
     .map_err(|e| {
-        println!("Error al actualizar horario: {}", e); // 👈 Log para errores SQL
+        println!("Error al actualizar horario: {}", e);
         format!("Error al actualizar horario: {}", e)
     })?;
 
-    println!("Horario actualizado correctamente: id = {}", id); // 👈 Log para éxito
+    println!("Horario actualizado correctamente: id = {}", id);
     Ok(())
 }
 
 #[tauri::command]
 pub async fn delete_horario(pool: State<'_, PgPool>, id: i32) -> Result<(), String> {
-    sqlx::query!("DELETE FROM horarios WHERE id = $1", id)
+    sqlx::query("DELETE FROM horarios WHERE id = $1")
+        .bind(id)
         .execute(&*pool)
         .await
         .map_err(|e| format!("Error al eliminar horario: {}", e))?;
