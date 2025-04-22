@@ -5,6 +5,7 @@ use sqlx::{postgres::PgPoolOptions, PgPool};
 use tauri::State;
 use std::env;
 use dotenvy::dotenv;
+use dotenvy_macro::dotenv;
 
 mod build;
 mod clientes;
@@ -47,13 +48,21 @@ async fn login(
 // -----------------------------
 
 #[tokio::main]
-async fn main() {
-    dotenv().ok(); // Carga las variables desde el archivo .env
-    // Lee la variable de entorno en tiempo de ejecución
-    let db_url = env::var("DATABASE_URL")
-        .expect("DATABASE_URL no está definida en las variables de entorno");
 
-    // Establece la conexión con la base de datos PostgreSQL
+async fn main() {
+   // Carga las variables de entorno desde el archivo .env
+   dotenv().ok();
+    
+   // Obtiene la URL de la base de datos desde las variables de entorno
+   let db_url = dotenv!("DATABASE_URL"); // Aquí se usa la macro dotenvy_macro
+
+   // Establece la conexión con la base de datos PostgreSQL
+   let pool = PgPoolOptions::new()
+       .max_connections(5)
+       .connect(&db_url)
+       .await
+       .expect("Error al conectar con la base de datos");
+
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .connect(&db_url)
@@ -61,9 +70,7 @@ async fn main() {
         .expect("Error al conectar con la base de datos");
 
     tauri::Builder::default()
-        // Gestiona el pool de conexiones
         .manage(pool)
-        // Registra los comandos
         .invoke_handler(tauri::generate_handler![
             login,
             empleados::create_employee,
@@ -86,14 +93,12 @@ async fn main() {
             proveedores::agregar_producto_proveedor,
             proveedores::obtener_productos_proveedor,
             proveedores::eliminar_producto_proveedor,
-            // Comandos de inventario
             inventario::get_inventory,
             inventario::get_inventory_item,
             inventario::add_inventory_item,
             inventario::update_inventory_item,
             inventario::delete_inventory_item,
         ])
-        // Inicia la aplicación Tauri
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
 }
