@@ -56,13 +56,7 @@ async fn main() {
    // Obtiene la URL de la base de datos desde las variables de entorno
    let db_url = dotenv!("DATABASE_URL"); // Aquí se usa la macro dotenvy_macro
 
-   // Establece la conexión con la base de datos PostgreSQL
-   let pool = PgPoolOptions::new()
-       .max_connections(5)
-       .connect(&db_url)
-       .await
-       .expect("Error al conectar con la base de datos");
-
+  
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .connect(&db_url)
