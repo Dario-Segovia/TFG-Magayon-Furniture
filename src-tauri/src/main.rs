@@ -1,18 +1,20 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 #[warn(dead_code)]
 use bcrypt::verify;
-use sqlx::{postgres::PgPoolOptions, PgPool};
-use tauri::State;
-use std::env;
 use dotenvy::dotenv;
 use dotenvy_macro::dotenv;
+use sqlx::{postgres::PgPoolOptions, PgPool};
+use std::env;
+use tauri::State;
 
 mod build;
 mod clientes;
+mod compras;
 mod empleados;
 mod horarios;
-mod proveedores;
 mod inventario;
+mod proveedores;
+mod ventas;
 
 // -----------------------------
 // FUNCIONES DE LOGIN
@@ -50,13 +52,12 @@ async fn login(
 #[tokio::main]
 
 async fn main() {
-   // Carga las variables de entorno desde el archivo .env
-   dotenv().ok();
-    
-   // Obtiene la URL de la base de datos desde las variables de entorno
-   let db_url = dotenv!("DATABASE_URL"); // Aquí se usa la macro dotenvy_macro
+    // Carga las variables de entorno desde el archivo .env
+    dotenv().ok();
 
-  
+    // Obtiene la URL de la base de datos desde las variables de entorno
+    let db_url = dotenv!("DATABASE_URL"); // Aquí se usa la macro dotenvy_macro
+
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .connect(&db_url)
@@ -92,6 +93,14 @@ async fn main() {
             inventario::add_inventory_item,
             inventario::update_inventory_item,
             inventario::delete_inventory_item,
+            ventas::crear_venta,
+            ventas::listar_ventas,
+            ventas::actualizar_venta,
+            ventas::eliminar_venta,
+            compras::crear_compra,
+            compras::actualizar_compra,
+            compras::listar_compras,
+            compras::eliminar_compra,
         ])
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
