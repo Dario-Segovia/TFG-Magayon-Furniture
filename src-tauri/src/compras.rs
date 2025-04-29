@@ -1,66 +1,131 @@
-use serde::{Serialize, Deserialize};
 use tauri::State;
-use tokio_postgres::Client;
+use sqlx::{PgPool, Row};
+use rust_decimal::Decimal;
+use rust_decimal::prelude::*;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Compra {
-    pub id: Option<i32>,
+    pub id: i32,
     pub fecha: Option<String>,
-    pub id_proveedor: i32,
-    pub estado: Option<String>,
+    pub id_proveedor: Option<i32>,
     pub total: Option<f64>,
 }
 
+
+
+#[derive(serde::Deserialize)]
+pub struct CompraData {
+    #[serde(alias = "idProveedor", alias = "id_proveedor")]
+    id_proveedor: i32,
+    total: f64,
+}
+
+
 #[tauri::command]
-pub async fn listar_compras(db: State<'_, Client>) -> Result<Vec<Compra>, String> {
-    let db = db.inner();
-    let rows = db.query("SELECT id, fecha, id_proveedor, estado, total FROM ordenes WHERE tipo = 'proveedor'", &[])
-        .await
-        .map_err(|e| e.to_string())?;
-    
-    let compras = rows.into_iter().map(|row| Compra {
-        id: Some(row.get(0)),
-        fecha: Some(row.get(1)),
-        id_proveedor: row.get(2),
-        estado: Some(row.get(3)),
-        total: Some(row.get(4)),
+pub async fn crear_compra(
+    pool: State<'_, PgPool>,
+    data: CompraData,  // Ahora recibimos una estructura
+) -> Result<i32, String> {
+    println!("Datos recibidos - id_proveedor: {}, total: {}", data.id_proveedor, data.total);
+
+    // Validar que el proveedor existe
+    let proveedor_existe: bool = sqlx::query_scalar(
+        "SELECT EXISTS(SELECT 1 FROM proveedores WHERE id = $1)"
+    )
+    .bind(data.id_proveedor)
+    .fetch_one(&*pool)
+    .await
+    .map_err(|e| format!("Error validando proveedor: {}", e))?;
+
+    if !proveedor_existe {
+        return Err(format!("El proveedor con ID {} no existe", data.id_proveedor));
+    }
+
+    // Insertar la compra
+    let row = sqlx::query(
+        r#"
+        INSERT INTO compras (id_proveedor, total)
+        VALUES ($1, $2)
+        RETURNING id
+        "#
+    )
+    .bind(data.id_proveedor)
+    .bind(data.total)
+    .fetch_one(&*pool)
+    .await
+    .map_err(|e| format!("Error al crear compra: {}", e))?;
+
+    Ok(row.get::<i32, _>("id"))
+}
+
+#[tauri::command]
+pub async fn listar_compras(pool: State<'_, PgPool>) -> Result<Vec<Compra>, String> {
+    let rows = sqlx::query(
+        r#"
+        SELECT 
+            id,
+            fecha::TEXT, 
+            id_proveedor, 
+            total
+        FROM compras
+        ORDER BY fecha DESC
+        "#
+    )
+    .fetch_all(&*pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    let compras = rows.into_iter().map(|row| {
+        Compra {
+            id: row.get("id"),
+            fecha: row.get("fecha"),
+            id_proveedor: row.get("id_proveedor"),
+            total: row
+                .get::<Option<Decimal>, _>("total")
+                .map(|d| d.to_f64().unwrap()),
+        }
     }).collect();
+
     Ok(compras)
 }
 
 #[tauri::command]
-pub async fn crear_compra(db: State<'_, Client>, compra: Compra) -> Result<(), String> {
-    let db = db.inner();
-    db.execute(
-        "INSERT INTO ordenes (tipo, id_proveedor, estado, total) VALUES ('proveedor', $1, $2, $3)",
-        &[&compra.id_proveedor, &compra.estado, &compra.total]
+pub async fn actualizar_compra(
+    pool: State<'_, PgPool>,
+    id: i32,
+    id_proveedor: Option<i32>,
+    total: Option<f64>
+) -> Result<(), String> {
+    sqlx::query(
+        r#"
+        UPDATE compras 
+        SET id_proveedor = $1, total = $2 
+        WHERE id = $3
+        "#
     )
+    .bind(id_proveedor)
+    .bind(total)
+    .bind(id)
+    .execute(&*pool)
     .await
     .map_err(|e| e.to_string())?;
+
     Ok(())
 }
 
-
 #[tauri::command]
-pub async fn actualizar_compra(db: State<'_, Client>, compra: Compra) -> Result<(), String> {
-    let db = db.inner();
-    db.execute(
-        "UPDATE ordenes SET id_proveedor = $1, estado = $2, total = $3 WHERE id = $4 AND tipo = 'proveedor'",
-        &[&compra.id_proveedor, &compra.estado, &compra.total, &compra.id]
+pub async fn eliminar_compra(pool: State<'_, PgPool>, id: i32) -> Result<(), String> {
+    sqlx::query(
+        r#"
+        DELETE FROM compras 
+        WHERE id = $1
+        "#
     )
+    .bind(id)
+    .execute(&*pool)
     .await
     .map_err(|e| e.to_string())?;
-    Ok(())
-}
 
-#[tauri::command]
-pub async fn eliminar_compra(db: State<'_, Client>, id: i32) -> Result<(), String> {
-    let db = db.inner();
-    db.execute(
-        "DELETE FROM ordenes WHERE id = $1 AND tipo = 'proveedor'",
-        &[&id]
-    )
-    .await
-    .map_err(|e| e.to_string())?;
     Ok(())
 }

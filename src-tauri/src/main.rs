@@ -101,6 +101,7 @@ async fn main() {
             compras::actualizar_compra,
             compras::listar_compras,
             compras::eliminar_compra,
+            
         ])
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
