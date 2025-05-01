@@ -12,11 +12,46 @@
             <label for="nombreProducto">Nombre del Producto</label>
             <input
               id="nombreProducto"
-              v-model="nombreProducto"
+              v-model="producto"
               required
               class="form-input"
               placeholder="Escribe el nombre..."
-            >
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="descripcion">Descripción</label>
+            <textarea
+              id="descripcion"
+              v-model="descripcion"
+              class="form-input"
+              placeholder="Describe el producto..."
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="precio">Precio Unitario (€)</label>
+            <input
+  id="precio"
+  type="number"
+  min="0"
+  step="0.01"
+  v-model.number="precio_unitario"
+  required
+  class="form-input"
+  placeholder="0.00"
+  @input="precio_unitario = $event.target.valueAsNumber || 0"
+/>
+          </div>
+
+          <div class="form-group">
+            <label for="categoria">Categoría</label>
+            <input
+              id="categoria"
+              v-model="categoria"
+              class="form-input"
+              placeholder="Ej. Tela, Cuero, Repuesto..."
+            />
           </div>
 
           <div class="form-actions">
@@ -36,18 +71,36 @@
 <script setup>
 import { ref } from 'vue';
 
-defineProps({
+const props = defineProps({
   proveedorId: { type: Number, required: true }
 });
 
 const emit = defineEmits(['close', 'save']);
-const nombreProducto = ref('');
+
+const producto = ref('');
+const descripcion = ref('');
+const precio_unitario = ref(0.00);
+const categoria = ref('');
 
 const guardarProducto = () => {
-  emit('save', nombreProducto.value);
-  nombreProducto.value = '';
+  const precio = parseFloat(precio_unitario.value);
+  if (isNaN(precio)) {
+    alert('Ingrese un precio válido');
+    return;
+  }
+
+  const nuevoProducto = {
+    proveedor_id: props.proveedorId,
+    producto: producto.value.trim(),
+    descripcion: descripcion.value.trim() || null,
+    precio_unitario: precio.toFixed(2), // Envía como string con 2 decimales
+    categoria: categoria.value.trim() || null
+  };
+
+  emit('save', nuevoProducto);
 };
 </script>
+
 
 <style scoped>
 .modal-overlay {

@@ -1,3 +1,4 @@
+use rust_decimal::Decimal;
 use tauri::State;
 use sqlx::{PgPool, FromRow};
 use serde::{Serialize, Deserialize};
@@ -21,7 +22,12 @@ pub struct ProductoProveedor {
     #[serde(alias = "proveedorId")] // Acepta proveedorId (camelCase) del frontend
     pub proveedor_id: i32,
     pub producto: String,
+    pub descripcion: Option<String>,
+    #[sqlx(try_from = "f64")]  // Allow conversion from FLOAT8
+    pub precio_unitario: Decimal,  // Still use Decimal internally
+    pub categoria: Option<String>,
 }
+
 
 #[tauri::command]
 pub async fn crear_proveedor(
@@ -143,12 +149,16 @@ pub async fn agregar_producto_proveedor(
 
     sqlx::query(
         r#"
-        INSERT INTO proveedor_productos (proveedor_id, producto)
-        VALUES ($1, $2)
+        INSERT INTO proveedor_productos 
+        (proveedor_id, producto, descripcion, precio_unitario, categoria)
+        VALUES ($1, $2, $3, $4, $5)
         "#,
     )
     .bind(producto.proveedor_id)
     .bind(&producto.producto)
+    .bind(&producto.descripcion)
+    .bind(producto.precio_unitario)
+    .bind(&producto.categoria)
     .execute(&*pool)
     .await
     .map_err(|e| {
@@ -160,6 +170,7 @@ pub async fn agregar_producto_proveedor(
     Ok(())
 }
 
+
 #[tauri::command]
 pub async fn obtener_productos_proveedor(
     pool: State<'_, PgPool>,
@@ -167,7 +178,13 @@ pub async fn obtener_productos_proveedor(
 ) -> Result<Vec<ProductoProveedor>, String> {
     let productos = sqlx::query_as::<_, ProductoProveedor>(
         r#"
-        SELECT id, proveedor_id, producto
+        SELECT 
+            id, 
+            proveedor_id, 
+            producto, 
+            descripcion, 
+            precio_unitario::FLOAT8 as precio_unitario,  -- Explicit cast to FLOAT8
+            categoria
         FROM proveedor_productos
         WHERE proveedor_id = $1
         ORDER BY producto ASC
@@ -176,12 +193,8 @@ pub async fn obtener_productos_proveedor(
     .bind(proveedor_id)
     .fetch_all(&*pool)
     .await
-    .map_err(|e| {
-        println!("Error al obtener productos del proveedor: {}", e);
-        format!("Error al obtener productos del proveedor: {}", e)
-    })?;
+    .map_err(|e| format!("Error al obtener productos: {}", e))?;
 
-    println!("Lista de productos obtenida correctamente. Total: {}", productos.len());
     Ok(productos)
 }
 

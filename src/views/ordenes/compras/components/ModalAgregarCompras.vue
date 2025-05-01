@@ -7,10 +7,13 @@
         <select
           id="proveedor"
           v-model.number="formData.id_proveedor"
+          @change="cargarProductosProveedor"
           required
           class="form-control"
         >
-          <option :value="null" disabled selected>Seleccione un proveedor</option>
+          <option :value="null" disabled selected>
+            Seleccione un proveedor
+          </option>
           <option
             v-for="proveedor in proveedores"
             :key="proveedor.id"
@@ -21,60 +24,50 @@
         </select>
       </div>
 
-      <h3>Productos</h3>
-      <div
-        v-for="(detalle, index) in formData.detalles"
-        :key="index"
-        class="detalle-producto"
-      >
-        <div class="form-group">
-          <input
-            v-model.number="detalle.id_producto"
-            type="number"
-            placeholder="ID Producto"
-            required
-            min="1"
-            class="form-control"
-          />
-        </div>
-        <div class="form-group">
-          <input
-            v-model.number="detalle.cantidad"
-            type="number"
-            min="1"
-            placeholder="Cantidad"
-            required
-            class="form-control"
-          />
-        </div>
-        <div class="form-group">
-          <input
-            v-model.number="detalle.precio_unitario"
-            type="number"
-            step="0.01"
-            min="0.01"
-            placeholder="Precio Unitario"
-            required
-            class="form-control"
-          />
-        </div>
-        <button
-          type="button"
-          @click="removeDetalle(index)"
-          class="btn btn-danger"
+      <h3>Producto del Proveedor</h3>
+      <div class="form-group">
+        <select
+          v-model.number="formData.detalles[0].id_producto"
+          required
+          class="form-control"
         >
-          ×
-        </button>
+          <option :value="null" disabled selected>
+            Seleccione un producto
+          </option>
+          <option
+            v-for="producto in productosProveedor"
+            :key="producto.id"
+            :value="producto.id"
+          >
+            {{ producto.producto }} (ID: {{ producto.id }})
+          </option>
+        </select>
       </div>
 
-      <button type="button" @click="addDetalle" class="btn btn-secondary">
-        + Añadir Producto
-      </button>
+      <div class="form-group">
+        <input
+          v-model.number="formData.detalles[0].cantidad"
+          type="number"
+          min="1"
+          placeholder="Cantidad"
+          required
+          class="form-control"
+        />
+      </div>
+      <div class="form-group">
+        <input
+          v-model.number="formData.detalles[0].precio_unitario"
+          type="number"
+          step="0.01"
+          min="0.01"
+          placeholder="Precio Unitario"
+          required
+          class="form-control"
+        />
+      </div>
 
       <div class="form-actions">
-        <button type="submit" class="btn btn-primary">
-          Guardar Compra
-        </button>
+        <button type="submit" class="btn btn-primary">Guardar Compra</button>
         <button type="button" @click="closeModal" class="btn btn-outline">
           Cancelar
         </button>
@@ -88,89 +81,88 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { invoke } from '@tauri-apps/api/core';
+import { ref, onMounted } from "vue";
+import { invoke } from "@tauri-apps/api/core";
 
-const emit = defineEmits(['close', 'refresh']);
+const emit = defineEmits(["close", "refresh"]);
 
 const proveedores = ref([]);
-const errorMessage = ref('');
+const productosProveedor = ref([]);
+const errorMessage = ref("");
 const formData = ref({
   id_proveedor: null,
   detalles: [
     {
       id_producto: null,
       cantidad: null,
-      precio_unitario: null
-    }
-  ]
+      precio_unitario: null,
+    },
+  ],
 });
 
 onMounted(async () => {
   try {
-    proveedores.value = await invoke('obtener_proveedores');
+    proveedores.value = await invoke("obtener_proveedores");
   } catch (err) {
     errorMessage.value = `Error al cargar proveedores: ${err}`;
   }
 });
 
-const addDetalle = () => {
-  formData.value.detalles.push({
-    id_producto: null,
-    cantidad: null,
-    precio_unitario: null
-  });
-};
-
-const removeDetalle = (index) => {
-  if (formData.value.detalles.length > 1) {
-    formData.value.detalles.splice(index, 1);
-  } else {
-    errorMessage.value = 'Debe haber al menos un producto';
+const cargarProductosProveedor = async () => {
+  try {
+    productosProveedor.value = await invoke("obtener_productos_proveedor", {
+      proveedorId: formData.value.id_proveedor,
+    });
+    formData.value.detalles[0].id_producto = null;
+  } catch (err) {
+    errorMessage.value = `Error al cargar productos del proveedor: ${err}`;
   }
 };
 
 const calcularTotal = () => {
   return formData.value.detalles.reduce((total, detalle) => {
-    return total + (detalle.cantidad * detalle.precio_unitario);
+    return total + detalle.cantidad * detalle.precio_unitario;
   }, 0);
 };
 
 const handleSubmit = async () => {
-  errorMessage.value = '';
-  
+  errorMessage.value = "";
+
   try {
-    if (formData.value.id_proveedor === null) {
-      throw new Error('Debe seleccionar un proveedor');
+    if (
+      formData.value.id_proveedor === null ||
+      !formData.value.detalles[0].id_producto ||
+      !formData.value.detalles[0].cantidad ||
+      !formData.value.detalles[0].precio_unitario ||
+      formData.value.detalles[0].cantidad <= 0 ||
+      formData.value.detalles[0].precio_unitario <= 0
+    ) {
+      throw new Error(
+        "Complete todos los campos con valores válidos y seleccione un proveedor y un producto"
+      );
     }
 
-    const detallesInvalidos = formData.value.detalles.some(d => 
-      !d.id_producto || !d.cantidad || !d.precio_unitario ||
-      d.cantidad <= 0 || d.precio_unitario <= 0
-    );
-
-    if (detallesInvalidos) {
-      throw new Error('Complete todos los campos de producto con valores válidos');
-    }
-
-    const compraId = await invoke('crear_compra', {
-      idProveedor: Number(formData.value.id_proveedor),  // Enviamos en camelCase
-      total: parseFloat(calcularTotal().toFixed(2))
+    const compraId = await invoke("crear_compra", {
+      data: {
+        id_proveedor: Number(formData.value.id_proveedor),
+        total: parseFloat(calcularTotal().toFixed(2)),
+      },
     });
 
     for (const detalle of formData.value.detalles) {
-      await invoke('crear_detalle_compra', {
-        id_compra: compraId,
-        id_producto: Number(detalle.id_producto),
-        cantidad: Number(detalle.cantidad),
-        precio_unitario: Number(detalle.precio_unitario)
+      await invoke("crear_detalle_compra", {
+        data: {
+          id_compra: compraId,
+          id_producto: Number(detalle.id_producto),
+          cantidad: Number(detalle.cantidad),
+          precio_unitario: Number(detalle.precio_unitario),
+        },
       });
     }
 
     resetForm();
-    emit('refresh');
+    emit("refresh");
     closeModal();
-    
   } catch (err) {
     errorMessage.value = `Error al guardar: ${err}`;
   }
@@ -183,14 +175,15 @@ const resetForm = () => {
       {
         id_producto: null,
         cantidad: null,
-        precio_unitario: null
-      }
-    ]
+        precio_unitario: null,
+      },
+    ],
   };
+  productosProveedor.value = [];
 };
 
 const closeModal = () => {
-  emit('close');
+  emit("close");
 };
 </script>
 
@@ -216,17 +209,6 @@ const closeModal = () => {
   font-size: 1rem;
 }
 
-.detalle-producto {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr auto;
-  gap: 1rem;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 4px;
-}
-
 .btn {
   padding: 0.5rem 1rem;
   border-radius: 4px;
@@ -235,25 +217,9 @@ const closeModal = () => {
 }
 
 .btn-primary {
-  background: #4CAF50;
+  background: #4caf50;
   color: white;
   border: none;
-}
-
-.btn-secondary {
-  background: #2196F3;
-  color: white;
-  border: none;
-  margin-bottom: 1rem;
-}
-
-.btn-danger {
-  background: #f44336;
-  color: white;
-  border: none;
-  padding: 0.5rem;
-  width: 2rem;
-  height: 2rem;
 }
 
 .btn-outline {
@@ -279,7 +245,8 @@ const closeModal = () => {
   color: #f44336;
 }
 
-h2, h3 {
+h2,
+h3 {
   color: #333;
   margin-bottom: 1.5rem;
 }
