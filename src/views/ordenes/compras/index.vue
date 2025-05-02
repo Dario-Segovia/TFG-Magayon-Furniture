@@ -14,7 +14,7 @@
       />
     </div>
 
-    <ModalAgregarCompras v-if="showAgregarModal" @close="cerrarAgregarModal" @compra-agregada="listarCompras" />
+    <ModalAgregarCompras v-if="showAgregarModal" @close="cerrarAgregarModal" @refresh="listarCompras" />
     <ModalModificarCompras v-if="showEditarModal" :compra="compraSeleccionada" @close="cerrarEditarModal" @compra-actualizada="listarCompras" />
     <ModalEliminarCompras v-if="showEliminarModal" :compra="compraSeleccionada" @close="cerrarEliminarModal" @compra-eliminada="listarCompras" />
   </div>
@@ -37,11 +37,30 @@ const compraSeleccionada = ref(null);
 
 async function listarCompras() {
   try {
-    compras.value = await invoke('listar_compras');
+    // Obtener la lista de compras con información básica
+    compras.value = await invoke('listar_compras_con_proveedor');
+    
+    // Verificar que las compras se han cargado correctamente
+    console.log('Compras cargadas:', compras.value);
+    
+    // Para cada compra, obtener sus productos
+    for (const compra of compras.value) {
+      // Llamada para obtener los productos de la compra
+      const productos = await invoke('obtener_productos_compra', {
+        idCompra: compra.id
+      });
+
+      // Verificar si los productos se cargaron correctamente
+      console.log(`Productos para la compra ${compra.id}:`, productos);
+      
+      // Asignar los productos a la compra
+      compra.productos = productos;
+    }
   } catch (error) {
-    console.error(error);
+    console.error('Error al listar las compras:', error);
   }
 }
+
 
 function abrirEditarModal(compra) {
   showEditarModal.value = true;
@@ -66,5 +85,6 @@ function cerrarEliminarModal() {
 
 onMounted(() => {
   listarCompras();
+  
 });
 </script>

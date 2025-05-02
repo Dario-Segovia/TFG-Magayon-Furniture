@@ -52,8 +52,11 @@ defineProps({
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
+  width: 100%;
+  /* Añade estas propiedades para prevenir posibles overrides: */
+  grid-auto-flow: row dense;
+  grid-auto-rows: min-content;
 }
-
 /* Estados de carga y vacío */
 .loading-state, .empty-state {
   display: flex;
@@ -196,7 +199,7 @@ defineProps({
 
 @media (max-width: 576px) {
   .employees-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Mismo comportamiento que en desktop pero con tarjetas más pequeñas */
   }
 }
 

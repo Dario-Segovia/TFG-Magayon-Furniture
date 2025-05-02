@@ -21,11 +21,11 @@
   
   <style scoped>
   .app-header {
-    background-color: var(--primary-color);
-   
-    padding: 1.5rem 2rem;
-    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-  }
+  background-color: var(--primary-color);
+  color: var(--text-color); /* Añade esto para el texto */
+  padding: 1.5rem 2rem;
+  box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
   
   .header-content {
     max-width: 1400px;

@@ -18,9 +18,34 @@ pub struct Compra {
 pub struct CompraData {
     #[serde(alias = "idProveedor", alias = "id_proveedor")]
     id_proveedor: i32,
-    total: f64,
+    total: Decimal,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ProductoCompra {
+    pub nombre: String,
+    pub cantidad: i32,
+    pub precio_unitario: Decimal,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CompraConDetalles {
+    pub id: i32,
+    pub fecha: Option<String>,
+    pub nombre_proveedor: String,
+    pub total: Option<f64>,
+    pub productos: Vec<ProductoCompra>,
+}
+
+
+#[derive(Serialize, Debug)]
+pub struct CompraConProveedor {
+    pub id: i32,
+    pub fecha: Option<String>,
+    pub id_proveedor: Option<i32>,
+    pub nombre_proveedor: Option<String>,
+    pub total: Option<f64>,
+}
 
 #[derive(serde::Deserialize)]
 
@@ -136,36 +161,77 @@ pub async fn crear_compra(
     Ok(row.get::<i32, _>("id"))
 }
 
+
 #[tauri::command]
-pub async fn listar_compras(pool: State<'_, PgPool>) -> Result<Vec<Compra>, String> {
+pub async fn listar_compras_con_proveedor(pool: State<'_, PgPool>) -> Result<Vec<CompraConProveedor>, String> {
     let rows = sqlx::query(
         r#"
         SELECT 
-            id,
-            fecha::TEXT, 
-            id_proveedor, 
-            total
-        FROM compras
-        ORDER BY fecha DESC
+            c.id,
+            c.fecha::TEXT, 
+            c.id_proveedor, 
+            p.nombre as nombre_proveedor,
+            c.total
+        FROM compras c
+        LEFT JOIN proveedores p ON c.id_proveedor = p.id
+        ORDER BY c.fecha DESC
         "#
     )
     .fetch_all(&*pool)
     .await
     .map_err(|e| e.to_string())?;
 
-    let compras = rows.into_iter().map(|row| {
-        Compra {
+    let compras: Vec<CompraConProveedor> = rows.into_iter().map(|row| {
+        CompraConProveedor {
             id: row.get("id"),
             fecha: row.get("fecha"),
             id_proveedor: row.get("id_proveedor"),
-            total: row
-                .get::<Option<Decimal>, _>("total")
-                .map(|d| d.to_f64().unwrap()),
+            nombre_proveedor: row.get("nombre_proveedor"),
+            total: row.get::<Option<Decimal>, _>("total").map(|d| d.to_f64().unwrap()),
         }
     }).collect();
 
     Ok(compras)
 }
+
+
+
+
+
+#[tauri::command]
+pub async fn obtener_productos_compra(
+    pool: State<'_, PgPool>,
+    id_compra: i32,
+) -> Result<Vec<ProductoCompra>, String> {
+    let rows = sqlx::query(
+        r#"
+        SELECT 
+            i.nombre,
+            dc.cantidad,
+            dc.precio_unitario
+        FROM detalle_compras dc
+        JOIN inventario i ON dc.id_producto = i.id
+        WHERE dc.id_compra = $1
+        "#
+    )
+    .bind(id_compra)
+    .fetch_all(&*pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    let productos = rows.into_iter().map(|row| {
+        ProductoCompra {
+            nombre: row.get("nombre"),
+            cantidad: row.get("cantidad"),
+            precio_unitario: row.get("precio_unitario"),
+        }
+    }).collect();
+
+    Ok(productos)
+}
+
+
+
 
 #[tauri::command]
 pub async fn actualizar_compra(
@@ -206,3 +272,5 @@ pub async fn eliminar_compra(pool: State<'_, PgPool>, id: i32) -> Result<(), Str
 
     Ok(())
 }
+
+

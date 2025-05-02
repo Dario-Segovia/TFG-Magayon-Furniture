@@ -90,6 +90,8 @@ const proveedores = ref([]);
 const productosProveedor = ref([]);
 const errorMessage = ref("");
 const formData = ref({
+
+
   id_proveedor: null,
   detalles: [
     {
@@ -129,13 +131,15 @@ const handleSubmit = async () => {
   errorMessage.value = "";
 
   try {
+    const detalle = formData.value.detalles[0];
+
     if (
       formData.value.id_proveedor === null ||
-      !formData.value.detalles[0].id_producto ||
-      !formData.value.detalles[0].cantidad ||
-      !formData.value.detalles[0].precio_unitario ||
-      formData.value.detalles[0].cantidad <= 0 ||
-      formData.value.detalles[0].precio_unitario <= 0
+      !detalle.id_producto ||
+      !detalle.cantidad ||
+      !detalle.precio_unitario ||
+      detalle.cantidad <= 0 ||
+      detalle.precio_unitario <= 0
     ) {
       throw new Error(
         "Complete todos los campos con valores válidos y seleccione un proveedor y un producto"
@@ -149,16 +153,17 @@ const handleSubmit = async () => {
       },
     });
 
-    for (const detalle of formData.value.detalles) {
-      await invoke("crear_detalle_compra", {
-        data: {
-          id_compra: compraId,
-          id_producto: Number(detalle.id_producto),
-          cantidad: Number(detalle.cantidad),
-          precio_unitario: Number(detalle.precio_unitario),
-        },
-      });
-    }
+    await invoke("crear_detalle_compra", {
+  data: {
+    id_compra: compraId,
+    cantidad: detalle.cantidad,
+    precio_unitario: detalle.precio_unitario,
+    nombre: productosProveedor.value.find(p => p.id === detalle.id_producto)?.producto || "Producto desconocido",
+    descripcion: productosProveedor.value.find(p => p.id === detalle.id_producto)?.descripcion || "",
+    categoria: productosProveedor.value.find(p => p.id === detalle.id_producto)?.categoria || "",
+  },
+});
+
 
     resetForm();
     emit("refresh");
@@ -167,6 +172,7 @@ const handleSubmit = async () => {
     errorMessage.value = `Error al guardar: ${err}`;
   }
 };
+
 
 const resetForm = () => {
   formData.value = {
