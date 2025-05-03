@@ -3,6 +3,7 @@ use sqlx::{PgPool, Row};
 use rust_decimal::Decimal;
 use rust_decimal::prelude::*;
 use serde::{Deserialize, Serialize};
+use chrono::NaiveDateTime; 
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Compra {
@@ -21,12 +22,15 @@ pub struct CompraData {
     total: Decimal,
 }
 
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ProductoCompra {
     pub nombre: String,
     pub cantidad: i32,
     pub precio_unitario: Decimal,
 }
+
+
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CompraConDetalles {
@@ -47,6 +51,17 @@ pub struct CompraConProveedor {
     pub total: Option<f64>,
 }
 
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CompraConProveedorYDetalles {
+    pub id: i32,
+    pub fecha: String,
+    pub id_proveedor: Option<i32>,
+    pub nombre_proveedor: Option<String>,
+    pub total: Option<f64>,
+    pub productos: Vec<DetalleCompra>,
+}
+
 #[derive(serde::Deserialize)]
 
 pub struct DetalleCompraData {
@@ -61,6 +76,25 @@ pub struct DetalleCompraData {
     pub categoria: Option<String>,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub struct DetalleCompra {
+    pub id_producto: i32,
+    pub cantidad: i32,
+    pub precio_unitario: f64,
+}
+
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct CompraDetalle {
+    pub id_compra: i32,
+    pub fecha: String,
+    pub id_proveedor: i32,
+    pub total: f64,
+    pub id_producto: i32,
+    pub nombre_producto: String,
+    pub cantidad: i32,
+    pub precio_unitario: f64,
+}
 
 
 #[tauri::command]
@@ -163,7 +197,8 @@ pub async fn crear_compra(
 
 
 #[tauri::command]
-pub async fn listar_compras_con_proveedor(pool: State<'_, PgPool>) -> Result<Vec<CompraConProveedor>, String> {
+pub async fn listar_compras_con_proveedor(pool: State<'_, PgPool>) -> Result<Vec<CompraConProveedorYDetalles>, String> {
+    // Primero obtenemos todas las compras con su proveedor
     let rows = sqlx::query(
         r#"
         SELECT 
@@ -175,21 +210,47 @@ pub async fn listar_compras_con_proveedor(pool: State<'_, PgPool>) -> Result<Vec
         FROM compras c
         LEFT JOIN proveedores p ON c.id_proveedor = p.id
         ORDER BY c.fecha DESC
-        "#
-    )
-    .fetch_all(&*pool)
-    .await
-    .map_err(|e| e.to_string())?;
+        "#)
+        .fetch_all(&*pool)
+        .await
+        .map_err(|e| e.to_string())?;
 
-    let compras: Vec<CompraConProveedor> = rows.into_iter().map(|row| {
-        CompraConProveedor {
-            id: row.get("id"),
+    let mut compras: Vec<CompraConProveedorYDetalles> = Vec::new();
+
+    for row in rows {
+        let id_compra: i32 = row.get("id");
+
+        // Segundo: obtener productos de esta compra (detalles)
+        let detalles = sqlx::query(
+            r#"
+            SELECT id_producto, cantidad, precio_unitario
+            FROM detalle_compras
+            WHERE id_compra = $1
+            "#)
+            .bind(id_compra)
+            .fetch_all(&*pool)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        let productos: Vec<DetalleCompra> = detalles
+            .into_iter()
+            .map(|detalle| DetalleCompra {
+                id_producto: detalle.get("id_producto"),
+                cantidad: detalle.get("cantidad"),
+                precio_unitario: detalle.get::<Decimal, _>("precio_unitario").to_f64().unwrap(),
+            })
+            .collect();
+
+        // Agregar la compra con su proveedor y detalles
+        compras.push(CompraConProveedorYDetalles {
+            id: id_compra,
             fecha: row.get("fecha"),
             id_proveedor: row.get("id_proveedor"),
             nombre_proveedor: row.get("nombre_proveedor"),
             total: row.get::<Option<Decimal>, _>("total").map(|d| d.to_f64().unwrap()),
-        }
-    }).collect();
+            productos, // Aquí incluimos los productos asociados a esta compra
+        });
+    }
 
     Ok(compras)
 }
@@ -230,33 +291,6 @@ pub async fn obtener_productos_compra(
     Ok(productos)
 }
 
-
-
-
-#[tauri::command]
-pub async fn actualizar_compra(
-    pool: State<'_, PgPool>,
-    id: i32,
-    id_proveedor: Option<i32>,
-    total: Option<f64>
-) -> Result<(), String> {
-    sqlx::query(
-        r#"
-        UPDATE compras 
-        SET id_proveedor = $1, total = $2 
-        WHERE id = $3
-        "#
-    )
-    .bind(id_proveedor)
-    .bind(total)
-    .bind(id)
-    .execute(&*pool)
-    .await
-    .map_err(|e| e.to_string())?;
-
-    Ok(())
-}
-
 #[tauri::command]
 pub async fn eliminar_compra(pool: State<'_, PgPool>, id: i32) -> Result<(), String> {
     sqlx::query(
@@ -273,4 +307,77 @@ pub async fn eliminar_compra(pool: State<'_, PgPool>, id: i32) -> Result<(), Str
     Ok(())
 }
 
+#[tauri::command]
+pub async fn actualizar_compra(
+    pool: State<'_, PgPool>, 
+    id: i32,
+    id_proveedor: i32,
+    total: f64,
+    fecha: String,
+) -> Result<(), String> {
+    // Convertir la fecha a NaiveDateTime usando el formato adecuado
+    let fecha_convertida = NaiveDateTime::parse_from_str(&fecha, "%Y-%m-%d %H:%M:%S")
+        .map_err(|e| format!("Error al parsear la fecha: {}", e))?;
 
+    // Actualizar la compra en la base de datos
+    sqlx::query(
+        r#"
+        UPDATE compras
+        SET id_proveedor = $1, total = $2, fecha = $3
+        WHERE id = $4
+        "#,
+    )
+    .bind(id_proveedor)
+    .bind(total)
+    .bind(fecha_convertida) // Usar la fecha convertida
+    .bind(id)
+    .execute(&*pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+
+#[tauri::command]
+pub async fn obtener_detalles_compra(
+    pool: State<'_, PgPool>,
+    id_compra: i32,
+) -> Result<Vec<CompraDetalle>, String> {
+    // Realizar el JOIN entre las tablas compras, detalle_compras e inventario
+    let rows = sqlx::query(
+        r#"
+        SELECT 
+            c.id AS id_compra,
+            c.fecha,
+            c.id_proveedor,
+            c.total,
+            dc.id_producto,
+            i.nombre AS nombre_producto,
+            dc.cantidad,
+            dc.precio_unitario
+        FROM compras c
+        JOIN detalle_compras dc ON c.id = dc.id_compra
+        JOIN inventario i ON dc.id_producto = i.id
+        WHERE c.id = $1
+        "#,
+    )
+    .bind(id_compra)
+    .map(|row: sqlx::postgres::PgRow| {
+        CompraDetalle {
+            id_compra: row.get("id_compra"),
+            fecha: row.get("fecha"),
+            id_proveedor: row.get("id_proveedor"),
+            total: row.get("total"),
+            id_producto: row.get("id_producto"),
+            nombre_producto: row.get("nombre_producto"),
+            cantidad: row.get("cantidad"),
+            precio_unitario: row.get("precio_unitario"),
+        }
+    })
+    .fetch_all(&*pool)
+    .await
+    .map_err(|e| format!("Error obteniendo detalles de la compra: {}", e))?;
+
+    Ok(rows)
+}

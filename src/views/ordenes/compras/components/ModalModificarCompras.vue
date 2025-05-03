@@ -1,129 +1,176 @@
 <template>
-    <div class="modal">
+  <div v-if="visible" class="modal-overlay">
+    <div class="modal-container">
       <h2>Modificar Compra</h2>
-      <form @submit.prevent="modificarCompra">
-        <input 
-          v-model="id_proveedor" 
-          type="number" 
-          placeholder="ID Proveedor" 
-          required
-          min="1"
-        />
-        <select v-model="estado" required>
-          <option value="">Seleccione estado</option>
-          <option value="pendiente">Pendiente</option>
-          <option value="completado">Completado</option>
-          <option value="cancelado">Cancelado</option>
-        </select>
-        <input 
-          v-model="total" 
-          type="number" 
-          step="0.01" 
-          placeholder="Total" 
-          min="0"
-          required
-        />
-  
-        <div v-if="errorMessage" class="error-message">
-          {{ errorMessage }}
+      <form @submit.prevent="guardarCambios">
+        <!-- Proveedor -->
+        <div class="form-group">
+          <label for="id_proveedor">Proveedor:</label>
+          <input 
+            v-model="compraParaEditar.id_proveedor" 
+            type="number" 
+            id="id_proveedor" 
+            required
+          />
         </div>
-  
-        <div class="buttons">
+        
+        <!-- Total -->
+        <div class="form-group">
+          <label for="total">Total:</label>
+          <input 
+            v-model="compraParaEditar.total" 
+            type="number" 
+            step="0.01" 
+            id="total" 
+            required
+          />
+        </div>
+        
+        <!-- Fecha -->
+        <div class="form-group">
+          <label for="fecha">Fecha:</label>
+          <input 
+            v-model="compraParaEditar.fecha" 
+            type="datetime-local" 
+            id="fecha" 
+            required
+          />
+        </div>
+
+        <!-- Producto (mostrar solo los productos actuales) -->
+        <div class="form-group">
+          <label for="producto">Producto:</label>
+          <select v-model="compraParaEditar.productoSeleccionado" required>
+            <option 
+              v-for="producto in compraParaEditar.productos" 
+              :key="producto.id_producto" 
+              :value="producto.id_producto"
+            >
+              {{ producto.nombre }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" @click="cerrarModal">Cancelar</button>
           <button type="submit">Guardar Cambios</button>
-          <button type="button" @click="emit('close')">Cancelar</button>
         </div>
       </form>
     </div>
-  </template>
-  
-  <script setup>
-  import { ref, watch } from 'vue';
-  import { invoke } from '@tauri-apps/api/core';
-  
-  const props = defineProps({
-    compra: {
-      type: Object,
-      required: true
-    }
-  });
-  
-  const emit = defineEmits(['close', 'compra-actualizada']);
-  
-  const id_proveedor = ref(props.compra?.id_proveedor ?? 0);
-  const estado = ref(props.compra?.estado ?? '');
-  const total = ref(props.compra?.total ?? 0);
-  const errorMessage = ref('');
-  
-  watch(() => props.compra, (nuevaCompra) => {
-    if (nuevaCompra) {
-      id_proveedor.value = nuevaCompra.id_proveedor ?? 0;
-      estado.value = nuevaCompra.estado ?? '';
-      total.value = nuevaCompra.total ?? 0;
-    }
-  });
-  
-  async function modificarCompra() {
-    errorMessage.value = '';
-  
-    // Verifica si el tipo es "proveedor" y si el id_proveedor es correcto
-    if (props.compra.tipo === 'proveedor' && !id_proveedor.value) {
-      errorMessage.value = 'Debe ingresar un ID de proveedor válido para este tipo de orden';
-      return;
-    }
-  
-    if (!props.compra?.id) {
-      errorMessage.value = 'No se encontró ID de la compra';
-      return;
-    }
-  
-    const idProveedorNumber = parseInt(id_proveedor.value, 10);
-    const totalNumber = parseFloat(total.value);
-  
-    if (isNaN(idProveedorNumber) || idProveedorNumber <= 0) {
-      errorMessage.value = 'Debe ingresar un ID de proveedor válido';
-      return;
-    }
-  
-    if (!estado.value) {
-      errorMessage.value = 'Debe seleccionar un estado';
-      return;
-    }
-  
-    if (isNaN(totalNumber) || totalNumber < 0) {
-      errorMessage.value = 'Debe ingresar un total válido';
-      return;
-    }
-  
-    try {
-      // Imprime los datos antes de enviar la actualización para depurar
-      console.log('Enviando datos para actualizar la compra:', {
-        id: props.compra.id,
-        id_proveedor: idProveedorNumber,
-        estado: estado.value,
-        total: totalNumber
-      });
-  
-      await invoke('actualizar_compra', {
-        id: props.compra.id,
-        id_proveedor: idProveedorNumber,
-        estado: estado.value,
-        total: totalNumber
-      });
-  
-      emit('compra-actualizada');
-      emit('close');
-    } catch (error) {
-      console.error('Error updating purchase:', error);
-      errorMessage.value = 'Error al actualizar la compra: ' + error.toString();
-    }
-  }
-  console.log('Datos de la compra antes de la actualización:', {
-  id: props.compra.id,
-  tipo: props.compra.tipo,  // Verifica que tipo sea 'proveedor'
-  id_proveedor: id_proveedor.value,
-  estado: estado.value,
-  total: total.value
+  </div>
+</template>
+
+<script setup>
+import { ref, watch } from 'vue';
+import { defineProps, defineEmits } from 'vue';
+
+const props = defineProps({
+  visible: Boolean,
+  compraSeleccionada: Object
 });
 
-  </script>
-  
+const emit = defineEmits(['cerrar', 'guardar']);
+
+const compraParaEditar = ref({
+  productos: [],
+  productoSeleccionado: null
+});
+
+// Copiar la compra y establecer productoSeleccionado al primero
+watch(() => props.compraSeleccionada, (nuevaCompra) => {
+  if (nuevaCompra) {
+    compraParaEditar.value = {
+      ...nuevaCompra,
+      productoSeleccionado: nuevaCompra.productos?.[0]?.id_producto || null
+    };
+    console.log("Compra cargada:", compraParaEditar.value);
+  }
+}, { immediate: true });
+
+// Watch para depurar qué producto se está seleccionando
+watch(() => compraParaEditar.value.productoSeleccionado, (nuevoId) => {
+  console.log("Producto seleccionado ID:", nuevoId);
+  const seleccionado = compraParaEditar.value.productos.find(p => p.id_producto === nuevoId);
+  if (seleccionado) {
+    console.log("Producto seleccionado:", seleccionado);
+  } else {
+    console.warn("Producto no encontrado con ID:", nuevoId);
+  }
+});
+
+const guardarCambios = async () => {
+  try {
+    console.log("Datos a guardar:", compraParaEditar.value);
+    await emit('guardar', compraParaEditar.value);
+    cerrarModal();
+  } catch (error) {
+    console.error('Error guardando los cambios:', error);
+  }
+};
+
+const cerrarModal = () => {
+  emit('cerrar');
+};
+</script>
+
+<style scoped>
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-container {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+}
+
+h2 {
+  text-align: center;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  font-size: 14px;
+}
+
+input, select {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  font-size: 14px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+button {
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+}
+
+button[type="button"] {
+  background-color: #ccc;
+}
+
+button[type="submit"] {
+  background-color: #4CAF50;
+  color: white;
+}
+</style>

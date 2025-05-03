@@ -103,7 +103,9 @@ async fn main() {
             compras::obtener_productos_compra,
             compras::eliminar_compra,
             compras::crear_detalle_compra,
-          
+            compras::obtener_detalles_compra,
+            
+            
             
         ])
         .run(tauri::generate_context!())
