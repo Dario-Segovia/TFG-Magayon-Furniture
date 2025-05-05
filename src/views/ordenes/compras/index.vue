@@ -1,29 +1,50 @@
 <template>
-  <div class="container">
-    <h1>Compras</h1>
-
-    <button @click="showAgregarModal = true">Agregar Compra</button>
-
-    <div class="compras-list">
-      <ComprasCard
-        v-for="compra in compras"
-        :key="compra.id"
-        :compra="compra"
-        @editar="abrirEditarModal"
-        @eliminar="abrirEliminarModal"
-      />
+  <div class="inventario-container fade-in">
+    <div class="header">
+      <div class="header-content">
+        <h1>Compras</h1>
+        <p class="subtitle">Gestión de todas las compras realizadas</p>
+      </div>
+      <button class="btn-primary" @click="showAgregarModal = true">
+        Agregar Compra
+      </button>
     </div>
 
-    <ModalAgregarCompras v-if="showAgregarModal" @close="cerrarAgregarModal" @refresh="listarCompras" />
-    
-    <ModalModificarCompras 
+    <!-- Lista de compras -->
+    <div class="inventario-grid">
+      <div class="cards-grid">
+        <ComprasCard
+          v-for="compra in compras"
+          :key="compra.id"
+          :compra="compra"
+          @editar="abrirEditarModal"
+          @eliminar="abrirEliminarModal"
+        />
+      </div>
+    </div>
+
+    <!-- Modal para agregar compra -->
+    <ModalAgregarCompras
+      v-if="showAgregarModal"
+      @close="cerrarAgregarModal"
+      @refresh="listarCompras"
+    />
+
+    <!-- Modal para modificar compra -->
+    <ModalModificarCompras
       :visible="showEditarModal"
       :compraSeleccionada="compraParaEditar"
       @cerrar="cerrarEditarModal"
       @guardar="handleCompraActualizada"
     />
 
-    <ModalEliminarCompras v-if="showEliminarModal" :compra="compraSeleccionada" @close="cerrarEliminarModal" @compra-eliminada="listarCompras" />
+    <!-- Modal para eliminar compra -->
+    <ModalEliminarCompras
+      v-if="showEliminarModal"
+      :compra="compraSeleccionada"
+      @close="cerrarEliminarModal"
+      @compra-eliminada="listarCompras"
+    />
   </div>
 </template>
 
@@ -43,7 +64,7 @@ const compraParaEditar = ref(null);
 
 const compraSeleccionada = ref(null);
 const showEditarModal = ref(false);
-
+const showEliminarModal = ref(false);
 
 
 
@@ -133,3 +154,228 @@ onMounted(() => {
   listarCompras();
 });
 </script>
+
+<style scoped>
+/* Estilos base */
+.inventario-container {
+  padding: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+  background: #f4f7f9;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Hacer que el modal ocupe toda la pantalla */
+.fullscreen-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Fondo semitransparente */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999; /* Asegúrate de que esté por encima de otros elementos */
+  animation: fadeIn 0.5s;
+}
+
+.fullscreen-modal .modal-content {
+  width: 90%; /* Ajusta el ancho según lo desees */
+  height: 90%; /* Ajusta la altura según lo desees */
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  overflow-y: auto;
+  padding: 20px;
+}
+
+/* Animación de desvanecimiento */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Estilos para el encabezado */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+  padding: 22px;
+  background: linear-gradient(135deg,#2b4583 ,  #d457c3); /* Cambiado aquí */
+  border-radius: 10px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+  animation: fadeIn 0.5s;
+}
+
+.header-content h1 {
+  margin: 0;
+  font-size: 1.7rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 1rem;
+  color: #e0f7e9;
+}
+
+.filtros-container {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 20px;
+  align-items: center;
+  background: #fff;
+  padding: 14px 18px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  animation: fadeIn 0.5s;
+}
+
+.search-box {
+  position: relative;
+  flex-grow: 1;
+  min-width: 240px;
+}
+
+.search-box input {
+  width: 96%;
+  padding: 10px 15px 10px 35px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.search-box input:focus {
+  border-color: #4caf50;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.10);
+  outline: none;
+}
+
+.search-box i {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #777;
+  font-size: 1.2rem;
+}
+
+.filtros-avanzados button {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  background: linear-gradient(135deg, #be3fa3, #1ed06e);
+  color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.10);
+  transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
+}
+
+.filtros-avanzados button:hover {
+  background: linear-gradient(135deg, #be3fa3, #1ed06e);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.filtros-content {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.10);
+  z-index: 10;
+  width: 220px;
+  margin-top: 5px;
+}
+
+.filtro-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #333;
+}
+
+.filtro-group select {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.filtro-group select:focus {
+  border-color: #4caf50;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.10);
+  outline: none;
+}
+
+.inventario-grid {
+  margin-top: 10px;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.loading-container,
+.error-container,
+.no-results {
+  grid-column: 1 / -1;
+  padding: 20px;
+  text-align: center;
+  background: #f8f9fa;
+  border-radius: 5px;
+  margin: 20px 0;
+}
+
+.error-container {
+  background: #ffe6e6;
+  color: #d32f2f;
+}
+
+.no-results {
+  color: #6c757d;
+}
+
+.btn-primary {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  background: linear-gradient(135deg, #405890 ,  #c32caf);
+  color: white;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.10);
+  transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg,#c32caf, #405890);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(0,0,0,0.15);
+}
+</style>
