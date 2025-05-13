@@ -1,37 +1,47 @@
 <template>
-  <div class="modal">
-    <h2>Eliminar Compra</h2>
-    <p>¿Estás seguro de que quieres eliminar esta compra?</p>
-    <p><strong>ID:</strong> {{ compra.id }}</p>
-    <p><strong>Proveedor:</strong> {{ compra.id_proveedor }}</p>
+  <div class="modal-overlay">
+    <div class="modal-container confirm-modal">
+      <div class="modal-header">
+        <h3>Eliminar Compra</h3>
+        <button class="close-btn" @click="$emit('close')">×</button>
+      </div>
 
-    <button @click="eliminarCompra">Eliminar</button>
-    <button @click="$emit('close')">Cancelar</button>
+      <div class="modal-body">
+        <div class="message-container">
+          <span class="icon-warning">⚠️</span>
+          <p>¿Estás seguro de que quieres eliminar esta compra?</p>
+        </div>
+
+        
+        <p><strong>Proveedor:</strong> {{ compra.nombre_proveedor }}</p>
+        <p><strong>Total:</strong> {{ compra.total }} €</p>
+        <p><strong>Fecha:</strong> {{ compra.fecha }}</p>
+
+        <div class="modal-actions">
+          <button class="btn btn-cancel" @click="$emit('close')">Cancelar</button>
+          <button class="btn btn-confirm" @click="eliminarCompra">Eliminar</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { invoke } from '@tauri-apps/api/core';
 
-// Definir los props
 const props = defineProps({
   compra: Object
 });
 
-// Definir el emit
-const emit = defineEmits(['compra-eliminada', 'close']); // Aquí defines los eventos emitidos
+const emit = defineEmits(['compra-eliminada', 'close']);
 
-// Función para eliminar la compra
 async function eliminarCompra() {
   try {
-    // Llamada a la función de Tauri
     await invoke('eliminar_compra', {
       id: props.compra.id
     });
-
-    // Emitir los eventos
-    emit('compra-eliminada');  // Emitir evento para notificar al padre que la compra fue eliminada
-    emit('close');  // Emitir evento para cerrar el modal
+    emit('compra-eliminada');
+    emit('close');
   } catch (error) {
     console.error(error);
   }
@@ -127,6 +137,7 @@ async function eliminarCompra() {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+  margin-top: 20px;
 }
 
 .btn {

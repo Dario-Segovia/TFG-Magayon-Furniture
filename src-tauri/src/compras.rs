@@ -26,6 +26,7 @@ pub struct CompraData {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ProductoCompra {
     pub nombre: String,
+    pub id_producto: i32,
     pub cantidad: i32,
     pub precio_unitario: Decimal,
 }
@@ -84,9 +85,29 @@ pub struct DetalleCompra {
 }
 
 
+
+#[derive(Serialize, Deserialize)]
+pub struct CompraRequest {
+    pub id: i32,
+    #[serde(rename = "idProveedor")]
+    pub id_proveedor: i32,
+    pub total: f64,
+    pub fecha: String,
+}
+
+
+
+
+#[derive(serde::Serialize)]
+pub struct Proveedor {
+    pub id: i32,
+    pub nombre: String,
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CompraDetalle {
     pub id_compra: i32,
+    
     pub fecha: String,
     pub id_proveedor: i32,
     pub total: f64,
@@ -95,6 +116,32 @@ pub struct CompraDetalle {
     pub cantidad: i32,
     pub precio_unitario: f64,
 }
+
+
+#[tauri::command]
+pub async fn listar_proveedores(pool: State<'_, PgPool>) -> Result<Vec<Proveedor>, String> {
+    let rows = sqlx::query(
+        r#"
+        SELECT id, nombre
+        FROM proveedores
+        ORDER BY nombre
+        "#
+    )
+    .fetch_all(&*pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    let proveedores = rows
+        .into_iter()
+        .map(|row| Proveedor {
+            id: row.get("id"),
+            nombre: row.get("nombre"),
+        })
+        .collect();
+
+    Ok(proveedores)
+}
+
 
 
 #[tauri::command]
@@ -267,6 +314,7 @@ pub async fn obtener_productos_compra(
     let rows = sqlx::query(
         r#"
         SELECT 
+            dc.id_producto,
             i.nombre,
             dc.cantidad,
             dc.precio_unitario
@@ -282,6 +330,7 @@ pub async fn obtener_productos_compra(
 
     let productos = rows.into_iter().map(|row| {
         ProductoCompra {
+            id_producto: row.get("id_producto"), // Agregamos el id_producto
             nombre: row.get("nombre"),
             cantidad: row.get("cantidad"),
             precio_unitario: row.get("precio_unitario"),
@@ -290,6 +339,7 @@ pub async fn obtener_productos_compra(
 
     Ok(productos)
 }
+
 
 #[tauri::command]
 pub async fn eliminar_compra(pool: State<'_, PgPool>, id: i32) -> Result<(), String> {
@@ -309,17 +359,52 @@ pub async fn eliminar_compra(pool: State<'_, PgPool>, id: i32) -> Result<(), Str
 
 #[tauri::command]
 pub async fn actualizar_compra(
-    pool: State<'_, PgPool>, 
-    id: i32,
-    id_proveedor: i32,
-    total: f64,
-    fecha: String,
+    pool: State<'_, PgPool>,
+    detalles: Vec<CompraDetalle>,  // ✅ requiere un argumento llamado `detalles`
 ) -> Result<(), String> {
-    // Convertir la fecha a NaiveDateTime usando el formato adecuado
-    let fecha_convertida = NaiveDateTime::parse_from_str(&fecha, "%Y-%m-%d %H:%M:%S")
+    if detalles.is_empty() {
+        return Err("La lista de detalles está vacía.".to_string());
+    }
+
+    let compra_id = detalles[0].id_compra;
+    let fecha_convertida = NaiveDateTime::parse_from_str(&detalles[0].fecha, "%Y-%m-%d %H:%M:%S")
         .map_err(|e| format!("Error al parsear la fecha: {}", e))?;
 
-    // Actualizar la compra en la base de datos
+    let id_proveedor = detalles[0].id_proveedor;
+
+    // Iniciar una transacción
+    let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
+
+    // 1. Eliminar detalles anteriores
+    sqlx::query("DELETE FROM detalle_compras WHERE id_compra = $1")
+        .bind(compra_id)
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| format!("Error eliminando detalles anteriores: {}", e))?;
+
+    // 2. Insertar los nuevos detalles
+    let mut total = 0.0; // Variable para acumular el total
+    for detalle in &detalles {
+        // Insertamos cada detalle
+        sqlx::query(
+            r#"
+            INSERT INTO detalle_compras (id_compra, id_producto, cantidad, precio_unitario)
+            VALUES ($1, $2, $3, $4)
+            "#,
+        )
+        .bind(compra_id)
+        .bind(detalle.id_producto)
+        .bind(detalle.cantidad)
+        .bind(detalle.precio_unitario)
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| format!("Error insertando detalle: {}", e))?;
+
+        // Calculamos el total
+        total += detalle.cantidad as f64 * detalle.precio_unitario;
+    }
+
+    // 3. Actualizar la tabla compras con el nuevo total
     sqlx::query(
         r#"
         UPDATE compras
@@ -329,14 +414,22 @@ pub async fn actualizar_compra(
     )
     .bind(id_proveedor)
     .bind(total)
-    .bind(fecha_convertida) // Usar la fecha convertida
-    .bind(id)
-    .execute(&*pool)
+    .bind(fecha_convertida)
+    .bind(compra_id)
+    .execute(&mut *tx)
     .await
-    .map_err(|e| e.to_string())?;
+    .map_err(|e| format!("Error actualizando compra: {}", e))?;
 
+    // Confirmar la transacción
+    tx.commit().await.map_err(|e| format!("Error al confirmar cambios: {}", e))?;
+
+    println!("Compra con ID {} y sus detalles fueron actualizados correctamente.", compra_id);
     Ok(())
 }
+
+
+
+
 
 
 #[tauri::command]

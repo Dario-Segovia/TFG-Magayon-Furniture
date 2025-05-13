@@ -10,28 +10,66 @@
         <form @submit.prevent="guardarCambios" class="modal-form">
 
           <div class="form-grid">
-            <!-- Proveedor -->
+            <!-- Proveedor (nombre) -->
             <div class="form-group">
               <label for="id_proveedor">Proveedor:</label>
-              <input 
+              <select 
                 v-model="compraParaEditar.id_proveedor" 
-                type="number" 
                 id="id_proveedor" 
+                class="form-select" 
+                required
+              >
+                <option 
+                  v-for="proveedor in compraParaEditar.proveedores" 
+                  :key="proveedor.id" 
+                  :value="proveedor.id"
+                >
+                  {{ proveedor.nombre }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Producto -->
+            <div class="form-group">
+              <label for="producto">Producto:</label>
+              <select 
+                v-model="compraParaEditar.productoSeleccionado" 
+                id="producto"
+                class="form-select"
+                required
+              >
+                <option 
+                  v-for="producto in compraParaEditar.productos" 
+                  :key="producto.nombre" 
+                  :value="producto.nombre" 
+                >
+                  {{ producto.nombre }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Cantidad editable -->
+            <div class="form-group">
+              <label for="cantidad">Cantidad:</label>
+              <input 
+                v-model.number="compraParaEditar.cantidad" 
+                type="number" 
+                id="cantidad" 
                 class="form-input"
+                min="1"
                 required
               />
             </div>
 
-            <!-- Total -->
+            <!-- Total (solo lectura) -->
             <div class="form-group">
               <label for="total">Total:</label>
               <input 
-                v-model="compraParaEditar.total" 
+                :value="calcularTotal()" 
                 type="number" 
-                step="0.01" 
                 id="total" 
                 class="form-input"
-                required
+                readonly
               />
             </div>
 
@@ -46,26 +84,6 @@
                 required
               />
             </div>
-
-            <!-- Producto -->
-            <div class="form-group">
-              <label for="producto">Producto:</label>
-              <select 
-  v-model="compraParaEditar.productoSeleccionado" 
-  id="producto"
-  class="form-select"
-  required
->
-  <option 
-    v-for="producto in compraParaEditar.productos" 
-    :key="producto.nombre" 
-    :value="producto.nombre" 
-  >
-    {{ producto.nombre }}
-  </option>
-</select>
-
-            </div>
           </div>
 
           <div class="form-actions">
@@ -79,9 +97,11 @@
 </template>
 
 
+
 <script setup>
 import { ref, watch } from 'vue';
 import { defineProps, defineEmits } from 'vue';
+import { invoke } from '@tauri-apps/api/core';
 
 const props = defineProps({
   visible: Boolean,
@@ -95,54 +115,137 @@ const compraParaEditar = ref({
   productoSeleccionado: null
 });
 
-// Copiar la compra y establecer productoSeleccionado al primero
-// Copiar la compra y establecer productoSeleccionado al primer producto disponible
+const calcularTotal = () => {
+  const producto = compraParaEditar.value.productos.find(
+    p => p.nombre === compraParaEditar.value.productoSeleccionado
+  );
+  if (!producto) return 0;
+
+  const cantidad = compraParaEditar.value.cantidad || 0;
+  return (producto.precio_unitario * cantidad).toFixed(2);
+};
+
+
 watch(() => props.compraSeleccionada, (nuevaCompra) => {
   if (nuevaCompra) {
+    console.log("Cargando compra seleccionada:", nuevaCompra);
+
+    // Convierte '2025-05-13 11:07:12.919417' a '2025-05-13T11:07'
+    let fechaFormateada = '';
+    if (typeof nuevaCompra.fecha === 'string') {
+      const [fecha, hora] = nuevaCompra.fecha.split(' ');
+      if (fecha && hora) {
+        const horaLimpiada = hora.slice(0, 5); // HH:MM
+        fechaFormateada = `${fecha}T${horaLimpiada}`;
+      }
+    } else if (nuevaCompra.fecha instanceof Date) {
+      fechaFormateada = nuevaCompra.fecha.toISOString().slice(0, 16);
+    }
+
     compraParaEditar.value = {
       ...nuevaCompra,
-      productoSeleccionado: nuevaCompra.productos?.[0]?.nombre || null // Asigna el nombre del primer producto al campo productoSeleccionado
+      proveedores: nuevaCompra.proveedores || [
+        { id: nuevaCompra.id_proveedor, nombre: nuevaCompra.nombre_proveedor }
+      ],
+      productoSeleccionado: nuevaCompra.productos?.[0]?.nombre || null,
+      cantidad: nuevaCompra.productos?.[0]?.cantidad || 1,
+      productos: nuevaCompra.productos?.map(producto => ({
+        ...producto,
+        id_producto: producto.id_producto || producto.id || null
+      })) || [],
+      fecha: fechaFormateada
     };
-    console.log("Compra cargada:", compraParaEditar.value);
+
+    console.log("Productos cargados en la compra:", compraParaEditar.value.productos);
   }
 }, { immediate: true });
 
 
-// Watch para depurar qué producto se está seleccionando
-// Watch para depurar qué producto se está seleccionando
-watch(() => compraParaEditar.value.productoSeleccionado, (nuevoId) => {
-  console.log("Producto seleccionado ID:", nuevoId);
 
-  // Verificar si los productos están correctamente cargados
-  if (!compraParaEditar.value.productos || compraParaEditar.value.productos.length === 0) {
-    console.warn("No se encontraron productos disponibles para seleccionar.");
-    return;
-  }
 
-  const seleccionado = compraParaEditar.value.productos.find(p => p.id_producto === nuevoId);
+// Watch para depurar qué producto se está seleccionando
+watch(() => compraParaEditar.value.productoSeleccionado, (nuevoNombre) => {
+  console.log("Producto seleccionado nombre:", nuevoNombre);
+
+  const seleccionado = compraParaEditar.value.productos.find(
+    p => p.nombre === nuevoNombre
+  );
 
   if (seleccionado) {
-    console.log("Producto seleccionado:", seleccionado);
+    console.log("Producto seleccionado:", seleccionado);  // Log de producto seleccionado
   } else {
-    console.warn("Producto no encontrado con ID:", nuevoId);
+    console.warn("Producto no encontrado con nombre:", nuevoNombre);
   }
 });
 
-
 const guardarCambios = async () => {
+  // Actualiza la cantidad en el producto seleccionado
+  const producto = compraParaEditar.value.productos.find(
+    p => p.nombre === compraParaEditar.value.productoSeleccionado
+  );
+  if (producto) {
+    producto.cantidad = compraParaEditar.value.cantidad;
+  }
+
+  const detalles = compraParaEditar.value.productos.map(p => {
+    console.log("Producto antes de procesar:", p);
+
+    const idProducto = p.id_producto || p.id;
+    console.log("id_producto para el producto:", idProducto);
+
+    if (!idProducto) {
+      console.error("Falta id_producto para el producto:", p);
+      return null;
+    }
+
+    const cantidad = Number(p.cantidad);
+    const precioUnitario = Number(p.precio_unitario);
+    if (isNaN(cantidad) || isNaN(precioUnitario)) {
+      console.error("Cantidad o precio_unitario no válidos para el producto:", p);
+      return null;
+    }
+
+    // Eliminado el formateo de la fecha - se usa el valor directamente
+   return {
+  id_compra: compraParaEditar.value.id,
+  fecha: compraParaEditar.value.fecha.replace('T', ' ') + ':00',
+  id_proveedor: compraParaEditar.value.id_proveedor,
+  total: Number(compraParaEditar.value.total),
+  id_producto: idProducto,
+  nombre_producto: p.nombre,
+  cantidad: cantidad,
+  precio_unitario: precioUnitario
+};
+
+  }).filter(d => d !== null);
+
+  if (detalles.length === 0) {
+    console.error("No hay detalles válidos para actualizar.");
+    return;
+  }
+
+  console.log("Enviando detalles actualizados:", detalles);
+
   try {
-    console.log("Datos a guardar:", compraParaEditar.value);
-    await emit('guardar', compraParaEditar.value);
+    await invoke('actualizar_compra', { detalles });
     cerrarModal();
+    emit('refresh');
   } catch (error) {
     console.error('Error guardando los cambios:', error);
   }
 };
 
+
+
+
 const cerrarModal = () => {
   emit('cerrar');
+
 };
 </script>
+
+
+
 
 <style scoped>
 .modal-overlay {

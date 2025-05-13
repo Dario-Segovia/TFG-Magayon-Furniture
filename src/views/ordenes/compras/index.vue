@@ -36,6 +36,7 @@
       :compraSeleccionada="compraParaEditar"
       @cerrar="cerrarEditarModal"
       @guardar="handleCompraActualizada"
+      @refresh="listarCompras"
     />
 
     <!-- Modal para eliminar compra -->
@@ -71,35 +72,37 @@ const showEliminarModal = ref(false);
 
 
 function abrirEditarModal(compra) {
-  compraParaEditar.value = compra; // Asignar toda la compra, incluida su ID
+  compraParaEditar.value = { ...compra }; // Clonar para evitar edición directa
   showEditarModal.value = true;
 }
 
 
+
 async function handleCompraActualizada(compraActualizada) {
   const fechaObj = new Date(compraActualizada.fecha);
-const fechaFormateada = `${fechaObj.getFullYear()}-${(fechaObj.getMonth() + 1).toString().padStart(2, '0')}-${fechaObj.getDate().toString().padStart(2, '0')} ${fechaObj.getHours().toString().padStart(2, '0')}:${fechaObj.getMinutes().toString().padStart(2, '0')}:${fechaObj.getSeconds().toString().padStart(2, '0')}`;
-
+  const fechaFormateada = `${fechaObj.getFullYear()}-${(fechaObj.getMonth() + 1).toString().padStart(2, '0')}-${fechaObj.getDate().toString().padStart(2, '0')} ${fechaObj.getHours().toString().padStart(2, '0')}:${fechaObj.getMinutes().toString().padStart(2, '0')}:${fechaObj.getSeconds().toString().padStart(2, '0')}`;
 
   try {
-    // Verificar que la compra tenga el campo 'id'
     if (!compraActualizada.id) {
       throw new Error("La compra debe tener un ID para actualizarla");
     }
 
     await invoke('actualizar_compra', {
-  id: compraActualizada.id,
-  idProveedor: compraActualizada.id_proveedor, // ✅ clave corregida
-  total: compraActualizada.total,
-  fecha: fechaFormateada // ✅ fecha en formato válido para PostgreSQL
-});
+      id: compraActualizada.id,
+      idProveedor: compraActualizada.id_proveedor,
+      total: compraActualizada.total,
+      fecha: fechaFormateada
+    });
 
+    // ACTUALIZAR localmente antes de recargar
+    const index = compras.value.findIndex(c => c.id === compraActualizada.id);
+    if (index !== -1) {
+      compras.value[index] = { ...compraActualizada };
+    }
 
-    // Después de guardar los cambios, vuelve a listar las compras
-    listarCompras();
-
-    // Cerrar el modal de edición
     cerrarEditarModal();
+    // Si quieres forzar la recarga completa
+    listarCompras();
   } catch (error) {
     console.error('Error actualizando la compra:', error);
   }
@@ -108,29 +111,29 @@ const fechaFormateada = `${fechaObj.getFullYear()}-${(fechaObj.getMonth() + 1).t
 
 
 
+
 async function listarCompras() {
   try {
-    compras.value = await invoke('listar_compras_con_proveedor');
-    
-    // Log para verificar que se obtienen todas las compras
-    console.log("Compras:", compras.value);
-
-    // Aquí recorremos cada compra y, en caso de que sea necesario, se asignan productos
-    for (const compra of compras.value) {
+    const lista = await invoke('listar_compras_con_proveedor');
+    for (const compra of lista) {
       const productos = await invoke('obtener_productos_compra', {
         idCompra: compra.id
       });
-      
-      // Asignar los productos a la compra
-      compra.productos = productos;
 
-      // Log para ver el objeto de cada compra con los productos
-      console.log("Compra completa con productos:", compra);
+      const proveedores = await invoke('listar_proveedores'); // Asegúrate de tener esta función en el backend
+
+      compra.productos = productos;
+      compra.proveedores = proveedores;
+
+      console.log("Compra completa con productos y proveedores:", compra);
     }
+
+    compras.value = lista;
   } catch (error) {
     console.error('Error al listar las compras:', error);
   }
 }
+
 
 
 function abrirEliminarModal(compra) {
