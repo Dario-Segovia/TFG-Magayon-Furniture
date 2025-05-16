@@ -10,16 +10,59 @@
       </button>
     </div>
 
+    <!-- Filtros -->
+    <div class="filtros-container">
+      <div class="search-box">
+        <input type="text" placeholder="Buscar compras..." v-model="filtroTexto" />
+        <i>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </i>
+      </div>
+      <div class="filtros-avanzados" style="position:relative;">
+        <button @click="mostrarFiltros = !mostrarFiltros">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><line x1="1" y1="14" x2="7" y2="14" stroke-width="2"/><line x1="9" y1="8" x2="15" y2="8" stroke-width="2"/><line x1="17" y1="16" x2="23" y2="16" stroke-width="2"/></svg>
+          Filtros
+        </button>
+        <div v-if="mostrarFiltros" class="filtros-content">
+          <div class="filtro-group">
+            <label>Fecha desde</label>
+            <input type="date" class="filtro-input" v-model="filtroFechaDesde">
+          </div>
+          <div class="filtro-group">
+            <label>Fecha hasta</label>
+            <input type="date" class="filtro-input" v-model="filtroFechaHasta">
+          </div>
+          <div class="filtro-group">
+            <label>Proveedor</label>
+            <select class="filtro-select" v-model="filtroProveedor">
+              <option value="">Todos</option>
+              <option v-for="proveedor in proveedores" :key="proveedor.id" :value="proveedor.id">
+                {{ proveedor.nombre }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Lista de compras -->
     <div class="inventario-grid">
       <div class="cards-grid">
-        <ComprasCard
-          v-for="compra in compras"
-          :key="compra.id"
-          :compra="compra"
-          @editar="abrirEditarModal"
-          @eliminar="abrirEliminarModal"
-        />
+        <template v-if="comprasFiltradas.length > 0">
+          <ComprasCard
+            v-for="compra in comprasFiltradas"
+            :key="compra.id"
+            :compra="compra"
+            @editar="abrirEditarModal"
+            @eliminar="abrirEliminarModal"
+          />
+        </template>
+        <div v-else class="no-results">
+          No se encontraron compras registradas
+        </div>
       </div>
     </div>
 
@@ -49,9 +92,8 @@
   </div>
 </template>
 
-
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 
 import ComprasCard from './components/ComprasCard.vue';
@@ -60,23 +102,24 @@ import ModalModificarCompras from './components/ModalModificarCompras.vue';
 import ModalEliminarCompras from './components/ModalEliminarCompras.vue';
 
 const compras = ref([]);
+const proveedores = ref([]);
 const showAgregarModal = ref(false);
 const compraParaEditar = ref(null);
-
 const compraSeleccionada = ref(null);
 const showEditarModal = ref(false);
 const showEliminarModal = ref(false);
 
-
-
-
+// Filtros
+const filtroProveedor = ref('');
+const filtroFechaDesde = ref('');
+const filtroFechaHasta = ref('');
+const filtroTexto = ref('');
+const mostrarFiltros = ref(false);
 
 function abrirEditarModal(compra) {
-  compraParaEditar.value = { ...compra }; // Clonar para evitar edición directa
+  compraParaEditar.value = { ...compra };
   showEditarModal.value = true;
 }
-
-
 
 async function handleCompraActualizada(compraActualizada) {
   const fechaObj = new Date(compraActualizada.fecha);
@@ -86,75 +129,70 @@ async function handleCompraActualizada(compraActualizada) {
     if (!compraActualizada.id) {
       throw new Error("La compra debe tener un ID para actualizarla");
     }
-
     await invoke('actualizar_compra', {
       id: compraActualizada.id,
       idProveedor: compraActualizada.id_proveedor,
       total: compraActualizada.total,
       fecha: fechaFormateada
     });
-
-    // ACTUALIZAR localmente antes de recargar
     const index = compras.value.findIndex(c => c.id === compraActualizada.id);
     if (index !== -1) {
       compras.value[index] = { ...compraActualizada };
     }
-
     cerrarEditarModal();
-    // Si quieres forzar la recarga completa
     listarCompras();
   } catch (error) {
     console.error('Error actualizando la compra:', error);
   }
 }
 
-
-
-
-
 async function listarCompras() {
   try {
     const lista = await invoke('listar_compras_con_proveedor');
+    const proveedoresList = await invoke('listar_proveedores');
+    proveedores.value = proveedoresList;
     for (const compra of lista) {
       const productos = await invoke('obtener_productos_compra', {
         idCompra: compra.id
       });
-
-      const proveedores = await invoke('listar_proveedores'); // Asegúrate de tener esta función en el backend
-
       compra.productos = productos;
-      compra.proveedores = proveedores;
-
-      console.log("Compra completa con productos y proveedores:", compra);
     }
-
     compras.value = lista;
   } catch (error) {
     console.error('Error al listar las compras:', error);
   }
 }
 
-
-
 function abrirEliminarModal(compra) {
   compraSeleccionada.value = compra;
   showEliminarModal.value = true;
 }
-
-function cerrarAgregarModal() {
-  showAgregarModal.value = false;
-}
-
-function cerrarEditarModal() {
-  showEditarModal.value = false;
-}
-
-function cerrarEliminarModal() {
-  showEliminarModal.value = false;
-}
+function cerrarAgregarModal() { showAgregarModal.value = false; }
+function cerrarEditarModal() { showEditarModal.value = false; }
+function cerrarEliminarModal() { showEliminarModal.value = false; }
 
 onMounted(() => {
   listarCompras();
+});
+
+// Filtro computado
+const comprasFiltradas = computed(() => {
+  return compras.value.filter(c => {
+    // Filtro por proveedor
+    if (filtroProveedor.value && String(c.id_proveedor) !== String(filtroProveedor.value)) return false;
+    // Filtro por fecha desde
+    if (filtroFechaDesde.value && new Date(c.fecha) < new Date(filtroFechaDesde.value)) return false;
+    // Filtro por fecha hasta
+    if (filtroFechaHasta.value && new Date(c.fecha) > new Date(filtroFechaHasta.value + 'T23:59:59')) return false;
+    // Filtro por texto (proveedor o producto)
+    if (filtroTexto.value) {
+      const texto = filtroTexto.value.toLowerCase();
+      const proveedor = (c.nombre_proveedor || '').toLowerCase();
+      const productos = (c.productos || []).map(p => p.nombre?.toLowerCase() || '').join(' ');
+      if (!proveedor.includes(texto) && !productos.includes(texto)) return false;
+    }
+    return true;
+  });
 });
 </script>
 

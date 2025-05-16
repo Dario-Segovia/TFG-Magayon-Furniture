@@ -7,7 +7,7 @@ import Clientes from '../views/clientes/index.vue';
 import Ordenes from '../views/ordenes/index.vue';
 import Proveedores from '../views/proveedores/index.vue';
 import Conversiones from '../views/Conversiones.vue';
-import Estadisticas from '../views/Estadisticas.vue';
+import Estadisticas from '../views/estadisticas/index.vue';
 
 const routes = [
   { path: '/', component: Login },

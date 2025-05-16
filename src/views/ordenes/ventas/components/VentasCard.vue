@@ -3,19 +3,28 @@
     <div class="card-header">
       <div>
         <h3>
-          <span class="compra-id">#{{ compra.id }}</span>
-          <span class="compra-fecha">{{ formatearFecha(compra.fecha) }}</span>
+          <span class="venta-id">#{{ venta.id }}</span>
+          <span class="venta-fecha">{{ new Date(venta.fecha).toLocaleString() }}</span>
         </h3>
-        <p class="proveedor">
-          <i class="fa fa-truck"></i>
-          {{ compra.nombre_proveedor || 'Sin proveedor' }}
+        <p class="cliente">
+          <i class="fa fa-user"></i>
+          {{ venta.nombre_cliente || 'Sin cliente' }}
         </p>
       </div>
       <div class="card-actions">
-        <button class="btn-action edit" @click="$emit('editar', compra)" title="Editar">✏️</button>
-        <button class="btn-action delete" @click="$emit('eliminar', compra)" title="Eliminar">🗑️</button>
+        <button 
+          @click="$emit('editar-venta', venta)" 
+          class="btn-action edit" 
+          title="Editar"
+        >✏️</button>
+        <button 
+          @click="$emit('eliminar-venta', venta.id)" 
+          class="btn-action delete" 
+          title="Eliminar"
+        >🗑️</button>
       </div>
     </div>
+
     <div class="productos-lista">
       <table>
         <thead>
@@ -27,41 +36,32 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="producto in compra.productos" :key="producto.id_producto || producto.id">
-            <td>{{ producto.nombre || producto.nombre_producto }}</td>
-            <td class="cantidad">{{ producto.cantidad }}</td>
-            <td class="compra">{{ producto.precio_unitario }} €</td>
-            <td class="subtotal">{{ (producto.cantidad * producto.precio_unitario).toFixed(2) }} €</td>
+          <tr v-for="detalle in venta.detalles" :key="detalle.id">
+            <td>{{ detalle.nombre_producto }}</td>
+            <td class="cantidad">{{ detalle.cantidad }}</td>
+            <td class="venta">{{ detalle.precio_unitario }} €</td>
+            <td class="subtotal">{{ (detalle.cantidad * detalle.precio_unitario).toFixed(2) }} €</td>
           </tr>
         </tbody>
       </table>
     </div>
+
     <div class="card-footer">
       <span class="total-label">Total:</span>
-      <span class="total-valor">{{ compra.total }} €</span>
-      <span class="productos-count">({{ compra.productos.length }} productos)</span>
+      <span class="total-valor">{{ venta.total }} €</span>
+      <span class="productos-count">({{ venta.detalles.length }} productos)</span>
     </div>
   </div>
 </template>
 
 <script setup>
 defineProps({
-  compra: {
+  venta: {
     type: Object,
-    default: () => ({ productos: [] }),
-  },
+    required: true
+  }
 });
-const formatearFecha = (fechaStr) => {
-  const fecha = new Date(fechaStr);
-  if (isNaN(fecha)) return "Fecha inválida";
-  return fecha.toLocaleString("es-ES", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
+defineEmits(['editar-venta', 'eliminar-venta']);
 </script>
 
 <style scoped>
@@ -91,20 +91,20 @@ const formatearFecha = (fechaStr) => {
   gap: 10px;
   align-items: center;
 }
-.compra-id {
+.venta-id {
   background: #e0e7ff;
   color: #405890;
   border-radius: 6px;
   padding: 2px 8px;
   font-size: 0.95em;
 }
-.compra-fecha {
+.venta-fecha {
   color: #888;
   font-size: 0.95em;
 }
-.proveedor {
+.cliente {
   margin: 0;
-  color: #2196f3;
+  color: #4caf50;
   font-weight: 500;
   font-size: 1em;
   display: flex;
@@ -132,6 +132,7 @@ const formatearFecha = (fechaStr) => {
 .btn-action.edit { color: #4caf50; }
 .btn-action.delete { color: #f44336; }
 .btn-action:hover { background: #e0e0e0; }
+
 .productos-lista {
   margin: 10px 0;
 }
@@ -157,8 +158,8 @@ const formatearFecha = (fechaStr) => {
   font-weight: 600;
   text-align: center;
 }
-.compra {
-  color: #2196f3;
+.venta {
+  color: #4caf50;
   font-weight: 600;
 }
 .subtotal {
@@ -178,7 +179,7 @@ const formatearFecha = (fechaStr) => {
 }
 .total-valor {
   font-size: 1.15em;
-  color: #2196f3;
+  color: #4caf50;
   font-weight: 700;
 }
 .productos-count {

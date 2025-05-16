@@ -1,257 +1,500 @@
 <template>
-  <div class="p-6 space-y-4">
-    <h1 class="text-2xl font-bold">{{ ventaEditando ? 'Editar Venta' : 'Crear Venta' }}</h1>
-
-    <div>
-      <label class="block mb-1 font-medium">Cliente</label>
-      <select v-model="venta.id_cliente" class="w-full border p-2 rounded">
-        <option disabled value="">Seleccione un cliente</option>
-        <option v-for="cliente in clientes" :key="cliente.id" :value="cliente.id">
-          {{ cliente.nombre }}
-        </option>
-      </select>
+  <div class="inventario-container">
+    <!-- Encabezado -->
+<div class="header">
+  <div class="header-content">
+    <div class="header-left">
+      <h1>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        Gestión de Ventas
+      </h1>
+      <p class="subtitle">Administra y registra todas las transacciones comerciales</p>
     </div>
+    <button 
+      class="btn-primary nueva-venta-btn"
+      @click="abrirModalAgregar"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      Nueva Venta
+    </button>
+  </div>
+</div>
 
-    <div>
-      <label class="block mb-1 font-medium">Producto</label>
-      <select v-model="productoSeleccionado" class="w-full border p-2 rounded">
-        <option disabled value="">Seleccione un producto</option>
-        <option v-for="producto in inventario" :key="producto.id" :value="producto.id">
-          {{ producto.nombre }} ({{ producto.categoria }})
-        </option>
-      </select>
-      <div class="mt-2">
-        <label class="block mb-1">Cantidad</label>
-        <input type="number" v-model.number="cantidad" class="w-full border p-2 rounded" />
+
+    <!-- Filtros -->
+    <div class="filtros-container">
+      <div class="search-box">
+        <input type="text" placeholder="Buscar ventas..." v-model="filtroTexto" />
+        <i>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </i>
       </div>
-      <button @click="agregarProducto" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded">
-        Agregar Producto
-      </button>
-    </div>
-
-    <div v-if="venta.detalles.length > 0">
-      <h2 class="font-semibold text-lg mt-4">Productos Agregados</h2>
-      <ul class="list-disc pl-5">
-        <li v-for="(detalle, index) in venta.detalles" :key="index" class="flex items-center">
-          {{ detalle.nombre }} - {{ detalle.cantidad }} x {{ detalle.precio_unitario }}€
-          <button @click="eliminarProducto(index)" class="ml-2 text-red-500">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-            </svg>
-          </button>
-        </li>
-      </ul>
-    </div>
-
-    <div class="flex space-x-4">
-      <button 
-        @click="ventaEditando ? actualizarVenta() : crearVenta()" 
-        class="px-6 py-2 bg-green-600 text-white rounded"
-        :disabled="venta.detalles.length === 0"
-      >
-        {{ ventaEditando ? 'Actualizar Venta' : 'Guardar Venta' }}
-      </button>
-      <button 
-        v-if="ventaEditando"
-        @click="cancelarEdicion" 
-        class="px-6 py-2 bg-gray-500 text-white rounded"
-      >
-        Cancelar
-      </button>
-    </div>
-
-    <!-- VENTAS REGISTRADAS -->
-    <div class="mt-10">
-      <h2 class="text-xl font-bold mb-2">Ventas Registradas</h2>
-      <div v-for="v in ventas" :key="v.id" class="border rounded p-4 mb-4 shadow">
-        <div class="flex justify-between items-start">
-          <div>
-            <h3 class="font-semibold">Venta #{{ v.id }} - {{ new Date(v.fecha).toLocaleString() }}</h3>
-            <p><strong>Cliente:</strong> {{ v.nombre_cliente || 'Sin cliente' }}</p>
-            <p><strong>Total:</strong> {{ v.total }} €</p>
+      <div class="filtros-avanzados">
+        <button @click="toggleFiltrosAvanzados">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
+          </svg>
+          Filtros
+        </button>
+        <div v-if="mostrarFiltros" class="filtros-content">
+          <div class="filtro-group">
+            <label>Fecha desde</label>
+            <input type="date" class="filtro-input" v-model="filtroFechaDesde">
           </div>
-          <button 
-            @click="editarVenta(v)" 
-            class="px-3 py-1 bg-yellow-500 text-white rounded text-sm"
-          >
-            Editar
-          </button>
+          <div class="filtro-group">
+            <label>Fecha hasta</label>
+            <input type="date" class="filtro-input" v-model="filtroFechaHasta">
+          </div>
+          <div class="filtro-group">
+            <label>Cliente</label>
+            <select class="filtro-select" v-model="filtroCliente">
+              <option value="">Todos</option>
+              <option v-for="cliente in clientes" :key="cliente.id" :value="cliente.id">
+                {{ cliente.nombre }}
+              </option>
+            </select>
+          </div>
         </div>
-
-        <ul class="mt-2 list-disc pl-5">
-          <li v-for="detalle in v.detalles" :key="detalle.id">
-            Producto: {{ detalle.nombre_producto }} - Cantidad: {{ detalle.cantidad }}, Precio unitario: {{ detalle.precio_unitario }} €
-          </li>
-        </ul>
       </div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="inventario-grid">
+      <!-- Modal para agregar/editar ventas -->
+      <div v-if="!ventaEditando" class="fullscreen-modal" v-show="mostrarModalAgregar">
+        <div class="modal-content">
+          <ModalAgregarVentas 
+            :clientes="clientes"
+            :inventario="inventario"
+            @crear-venta="crearVenta"
+            @cerrar-modal="mostrarModalAgregar = false"
+          />
+        </div>
+      </div>
+      
+      <div v-else class="fullscreen-modal" v-show="mostrarModalEditar">
+        <div class="modal-content">
+          <ModalModificarVentas 
+            :clientes="clientes"
+            :inventario="inventario"
+            :venta-actual="ventaActual"
+            @actualizar-venta="actualizarVenta"
+            @cancelar-edicion="cancelarEdicion"
+          />
+        </div>
+      </div>
+
+      <!-- Listado de ventas -->
+      <div class="mt-10">
+        <h2 class="text-xl font-bold mb-2">Ventas Registradas</h2>
+        <div class="cards-grid">
+          <template v-if="ventasFiltradas.length > 0">
+            <VentasCard 
+              v-for="v in ventasFiltradas" 
+              :key="v.id" 
+              :venta="v"
+              @editar-venta="editarVenta"
+              @eliminar-venta="eliminarVenta"
+            />
+          </template>
+          <div v-else class="no-results">
+            No se encontraron ventas registradas
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal de confirmación para eliminar -->
+      <ModalEliminarVentas 
+        v-if="ventaAEliminar"
+        :venta-id="ventaAEliminar"
+        @confirmar-eliminar="confirmarEliminarVenta"
+        @cancelar-eliminar="ventaAEliminar = null"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
+import VentasCard from './components/VentasCard.vue';
+import ModalAgregarVentas from './components/ModalAgregarVentas.vue';
+import ModalModificarVentas from './components/ModalModificarVentas.vue';
+import ModalEliminarVentas from './components/ModalEliminarVentas.vue';
 
 const clientes = ref([]);
 const inventario = ref([]);
-const productoSeleccionado = ref("");
-const cantidad = ref(1);
 const ventas = ref([]);
 const ventaEditando = ref(null);
+const ventaActual = ref(null);
+const ventaAEliminar = ref(null);
+const mostrarFiltros = ref(false);
+const mostrarModalAgregar = ref(false);
+const mostrarModalEditar = ref(false);
 
-const venta = ref({
-  id_cliente: '',
-  detalles: []
-});
+// Filtros
+const filtroCliente = ref('');
+const filtroFechaDesde = ref('');
+const filtroFechaHasta = ref('');
+const filtroTexto = ref('');
 
-const cargarVentas = async () => {
-  console.log("Obteniendo datos de ventas desde la base de datos...");
-  ventas.value = await invoke('get_ventas');
-  console.log("Datos de ventas obtenidos:", JSON.stringify(ventas.value, null, 2));
-};
-
+// Carga inicial de datos
 onMounted(async () => {
   clientes.value = await invoke('obtener_clientes');
   inventario.value = await invoke('get_inventory');
   await cargarVentas();
 });
 
-const agregarProducto = async () => {
-  if (!productoSeleccionado.value || cantidad.value <= 0) return;
-  
-  const producto = await invoke('get_inventory_item', { id: productoSeleccionado.value });
-  
-  // Verificar si el producto ya está en los detalles
-  const indexExistente = venta.value.detalles.findIndex(
-    d => d.id_producto === producto.id
-  );
-  
-  if (indexExistente >= 0) {
-    // Si ya existe, actualizar la cantidad
-    venta.value.detalles[indexExistente].cantidad += cantidad.value;
-  } else {
-    // Si no existe, agregarlo
-    venta.value.detalles.push({
-      id_producto: producto.id,
-      cantidad: cantidad.value,
-      precio_unitario: producto.precio_unitario,
-      nombre: producto.nombre
-    });
-  }
-  
-  productoSeleccionado.value = "";
-  cantidad.value = 1;
+const cargarVentas = async () => {
+  ventas.value = await invoke('get_ventas');
 };
 
-const eliminarProducto = (index) => {
-  venta.value.detalles.splice(index, 1);
+// Computed para ventas filtradas
+const ventasFiltradas = computed(() => {
+  return ventas.value.filter(v => {
+    // Filtro por cliente
+    if (filtroCliente.value && String(v.id_cliente) !== String(filtroCliente.value)) return false;
+    // Filtro por fecha desde
+    if (filtroFechaDesde.value && new Date(v.fecha) < new Date(filtroFechaDesde.value)) return false;
+    // Filtro por fecha hasta
+    if (filtroFechaHasta.value && new Date(v.fecha) > new Date(filtroFechaHasta.value + 'T23:59:59')) return false;
+    // Filtro por texto (cliente o producto)
+    if (filtroTexto.value) {
+      const texto = filtroTexto.value.toLowerCase();
+      const cliente = (v.nombre_cliente || '').toLowerCase();
+      const productos = (v.detalles || []).map(d => d.nombre_producto?.toLowerCase() || '').join(' ');
+      if (!cliente.includes(texto) && !productos.includes(texto)) return false;
+    }
+    return true;
+  });
+});
+
+const toggleFiltrosAvanzados = () => {
+  mostrarFiltros.value = !mostrarFiltros.value;
 };
 
-const crearVenta = async () => {
-  const payload = {
-    id_cliente: venta.value.id_cliente ? parseInt(venta.value.id_cliente) : null,
-    detalles: venta.value.detalles.map(d => ({
-      id_producto: d.id_producto,
-      cantidad: d.cantidad,
-      precio_unitario: d.precio_unitario
-    }))
-  };
+const abrirModalAgregar = () => {
+  mostrarModalAgregar.value = true;
+};
 
+// Métodos para manejar ventas
+const crearVenta = async (ventaData) => {
   try {
-    const id = await invoke('crear_venta', { data: payload });
+    const id = await invoke('crear_venta', { data: ventaData });
     alert(`Venta creada con ID: ${id}`);
-    resetForm();
+    mostrarModalAgregar.value = false;
     await cargarVentas();
   } catch (e) {
     alert('Error al crear la venta: ' + e);
   }
 };
 
-const editarVenta = (v) => {
-  ventaEditando.value = v.id;
-  venta.value = {
-    id_cliente: v.id_cliente,
-    detalles: [] // Limpiamos los detalles para agregarlos uno por uno
-  };
-  
-  // Mostrar el primer producto en los campos de edición
-  if (v.detalles.length > 0) {
-    const primerDetalle = v.detalles[0];
-    productoSeleccionado.value = primerDetalle.id_producto;
-    cantidad.value = primerDetalle.cantidad;
-    
-    // Agregar los demás productos a la lista de detalles
-    if (v.detalles.length > 1) {
-      venta.value.detalles = v.detalles.slice(1).map(d => ({
-        id_producto: d.id_producto,
-        cantidad: d.cantidad,
-        precio_unitario: d.precio_unitario,
-        nombre: d.nombre_producto
-      }));
-    }
-  }
-  
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-};
-
-const actualizarVenta = async () => {
-  // Asegurarnos de incluir el producto que está en los campos de edición
-  if (productoSeleccionado.value && cantidad.value > 0) {
-    const producto = await invoke('get_inventory_item', { id: productoSeleccionado.value });
-    venta.value.detalles.unshift({
-      id_producto: producto.id,
-      cantidad: cantidad.value,
-      precio_unitario: producto.precio_unitario,
-      nombre: producto.nombre
-    });
-  }
-
-  const payload = {
-    id_cliente: venta.value.id_cliente ? parseInt(venta.value.id_cliente) : null,
-    detalles: venta.value.detalles.map(d => ({
+const editarVenta = (venta) => {
+  ventaEditando.value = venta.id;
+  ventaActual.value = {
+    id_cliente: venta.id_cliente,
+    detalles: venta.detalles.map(d => ({
       id_producto: d.id_producto,
       cantidad: d.cantidad,
-      precio_unitario: d.precio_unitario
+      precio_unitario: d.precio_unitario,
+      nombre: d.nombre_producto
     }))
   };
+  mostrarModalEditar.value = true;
+};
 
+const actualizarVenta = async (ventaData) => {
   try {
     await invoke('update_venta', {
-  params: {
-    idVenta: ventaEditando.value,
-    data: payload
-  }
-});
-
+      params: {
+        idVenta: ventaEditando.value,
+        data: ventaData
+      }
+    });
     alert('Venta actualizada correctamente');
-    resetForm();
+    mostrarModalEditar.value = false;
+    ventaEditando.value = null;
+    ventaActual.value = null;
     await cargarVentas();
   } catch (e) {
     alert('Error al actualizar la venta: ' + e);
   }
 };
 
-const cancelarEdicion = () => {
-  resetForm();
+const eliminarVenta = (ventaId) => {
+  ventaAEliminar.value = ventaId;
 };
 
-const resetForm = () => {
-  venta.value = {
-    id_cliente: '',
-    detalles: []
-  };
+const confirmarEliminarVenta = async () => {
+  try {
+    await invoke('delete_venta', { idVenta: ventaAEliminar.value });
+    alert('Venta eliminada correctamente');
+    ventaAEliminar.value = null;
+    await cargarVentas();
+  } catch (e) {
+    alert('Error al eliminar la venta: ' + e);
+  }
+};
+
+const cancelarEdicion = () => {
+  mostrarModalEditar.value = false;
   ventaEditando.value = null;
-  productoSeleccionado.value = "";
-  cantidad.value = 1;
+  ventaActual.value = null;
 };
 </script>
 
 <style scoped>
-input, select {
+/* Estilos base */
+.inventario-container {
+  padding: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+  background: #f4f7f9;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+
+
+
+/* Animación de desvanecimiento */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Estilos para el encabezado */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+  padding: 22px;
+  background: linear-gradient(135deg,#2b4583 ,  #d457c3);
+  border-radius: 10px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+  animation: fadeIn 0.5s;
+}
+
+.header-content h1 {
+  margin: 0;
+  font-size: 1.7rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 1rem;
+  color: #e0f7e9;
+}
+
+.filtros-container {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 20px;
+  align-items: center;
+  background: #fff;
+  padding: 14px 18px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  animation: fadeIn 0.5s;
+}
+
+.search-box {
+  position: relative;
+  flex-grow: 1;
+  min-width: 240px;
+}
+
+.search-box input {
+  width: 96%;
+  padding: 10px 15px 10px 35px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.search-box input:focus {
+  border-color: #4caf50;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.10);
   outline: none;
 }
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+
+.search-box i {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #777;
+  font-size: 1.2rem;
 }
+
+.filtros-avanzados {
+  position: relative;
+}
+
+.filtros-avanzados button {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  background: linear-gradient(135deg, #be3fa3, #1ed06e);
+  color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.10);
+  transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
+}
+
+.filtros-avanzados button:hover {
+  background: linear-gradient(135deg, #be3fa3, #1ed06e);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.filtros-content {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.10);
+  z-index: 10;
+  width: 220px;
+  margin-top: 5px;
+}
+
+.filtro-group {
+  margin-bottom: 12px;
+}
+
+.filtro-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #333;
+}
+
+.filtro-group select,
+.filtro-group input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.filtro-group select:focus,
+.filtro-group input:focus {
+  border-color: #4caf50;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.10);
+  outline: none;
+}
+
+.inventario-grid {
+  margin-top: 10px;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.loading-container,
+.error-container,
+.no-results {
+  grid-column: 1 / -1;
+  padding: 20px;
+  text-align: center;
+  background: #f8f9fa;
+  border-radius: 5px;
+  margin: 20px 0;
+}
+
+.error-container {
+  background: #ffe6e6;
+  color: #d32f2f;
+}
+
+.no-results {
+  color: #6c757d;
+}
+
+.btn-primary {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  background: linear-gradient(135deg, #405890 ,  #c32caf);
+  color: white;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.10);
+  transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
+  margin-bottom: 20px;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg,#c32caf, #405890);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(0,0,0,0.15);
+}
+
+
+
+
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nueva-venta-btn {
+  margin-bottom: 0;
+}
+
 </style>

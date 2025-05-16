@@ -5,90 +5,71 @@
         <h2>Modificar Compra</h2>
         <button class="close-btn" @click="cerrarModal">×</button>
       </div>
-
       <div class="modal-body">
         <form @submit.prevent="guardarCambios" class="modal-form">
+          <div class="form-group full-width">
+            <label for="proveedor">Proveedor:</label>
+            <select
+              id="proveedor"
+              v-model.number="compraParaEditar.id_proveedor"
+              required
+              class="form-select"
+            >
+              <option v-for="proveedor in compraParaEditar.proveedores" :key="proveedor.id" :value="proveedor.id">
+                {{ proveedor.nombre }}
+              </option>
+            </select>
+          </div>
 
-          <div class="form-grid">
-            <!-- Proveedor (nombre) -->
-            <div class="form-group">
-              <label for="id_proveedor">Proveedor:</label>
-              <select 
-                v-model="compraParaEditar.id_proveedor" 
-                id="id_proveedor" 
-                class="form-select" 
-                required
-              >
-                <option 
-                  v-for="proveedor in compraParaEditar.proveedores" 
-                  :key="proveedor.id" 
-                  :value="proveedor.id"
-                >
-                  {{ proveedor.nombre }}
-                </option>
-              </select>
-            </div>
+          <!-- Fila para agregar producto -->
+          <div class="agregar-producto-row">
+            <select v-model="productoSeleccionado" class="form-select">
+              <option disabled value="">Producto</option>
+              <option v-for="producto in productosProveedor" :key="producto.id_producto || producto.id" :value="producto.id_producto || producto.id">
+                {{ producto.nombre || producto.producto }}
+              </option>
+            </select>
+            <input type="number" v-model.number="cantidad" min="1" class="form-input cantidad-input" placeholder="Cantidad" />
+            <button @click.prevent="agregarProducto" class="btn btn-primary btn-agregar" :disabled="!productoSeleccionado || cantidad <= 0">
+              <span>Agregar</span>
+            </button>
+          </div>
 
-            <!-- Producto -->
-            <div class="form-group">
-              <label for="producto">Producto:</label>
-              <select 
-                v-model="compraParaEditar.productoSeleccionado" 
-                id="producto"
-                class="form-select"
-                required
-              >
-                <option 
-                  v-for="producto in compraParaEditar.productos" 
-                  :key="producto.nombre" 
-                  :value="producto.nombre" 
-                >
-                  {{ producto.nombre }}
-                </option>
-              </select>
-            </div>
-
-            <!-- Cantidad editable -->
-            <div class="form-group">
-              <label for="cantidad">Cantidad:</label>
-              <input 
-                v-model.number="compraParaEditar.cantidad" 
-                type="number" 
-                id="cantidad" 
-                class="form-input"
-                min="1"
-                required
-              />
-            </div>
-
-            <!-- Total (solo lectura) -->
-            <div class="form-group">
-              <label for="total">Total:</label>
-              <input 
-                :value="calcularTotal()" 
-                type="number" 
-                id="total" 
-                class="form-input"
-                readonly
-              />
-            </div>
-
-            <!-- Fecha -->
-            <div class="form-group">
-              <label for="fecha">Fecha:</label>
-              <input 
-                v-model="compraParaEditar.fecha" 
-                type="datetime-local" 
-                id="fecha" 
-                class="form-input"
-                required
-              />
+          <!-- Tabla de productos agregados -->
+          <div v-if="compraParaEditar.productos.length > 0" class="productos-table-container">
+            <table class="productos-table">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Cant.</th>
+                  <th>Precio unit.</th>
+                  <th>Subtotal</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(detalle, index) in compraParaEditar.productos" :key="index" class="fade-in-row">
+                  <td>{{ detalle.nombre }}</td>
+                  <td>{{ detalle.cantidad }}</td>
+                  <td>{{ detalle.precio_unitario }} €</td>
+                  <td>{{ (detalle.cantidad * detalle.precio_unitario).toFixed(2) }} €</td>
+                  <td>
+                    <button @click="eliminarProducto(index)" class="btn btn-secondary btn-eliminar" title="Eliminar">
+                      🗑️
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="total-row">
+              <span>Total:</span>
+              <span class="total-valor">{{ totalCompra }} €</span>
             </div>
           </div>
 
           <div class="form-actions">
+            <button type="submit" class="btn btn-primary" :disabled="compraParaEditar.productos.length === 0">Guardar Cambios</button>
             <button type="button" class="btn btn-secondary" @click="cerrarModal">Cancelar</button>
-            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
           </div>
         </form>
       </div>
@@ -96,138 +77,121 @@
   </div>
 </template>
 
-
-
 <script setup>
-import { ref, watch } from 'vue';
-import { defineProps, defineEmits } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 
 const props = defineProps({
   visible: Boolean,
   compraSeleccionada: Object
 });
-
-const emit = defineEmits(['cerrar', 'guardar']);
+const emit = defineEmits(['cerrar', 'guardar', 'refresh']);
 
 const compraParaEditar = ref({
+  id: null,
+  id_proveedor: null,
+  proveedores: [],
   productos: [],
-  productoSeleccionado: null
+  fecha: '',
+  total: 0
 });
 
-const calcularTotal = () => {
-  const producto = compraParaEditar.value.productos.find(
-    p => p.nombre === compraParaEditar.value.productoSeleccionado
-  );
-  if (!producto) return 0;
-
-  const cantidad = compraParaEditar.value.cantidad || 0;
-  return (producto.precio_unitario * cantidad).toFixed(2);
-};
-
+const productosProveedor = ref([]);
+const productoSeleccionado = ref("");
+const cantidad = ref(1);
+const precioUnitario = ref(0);
 
 watch(() => props.compraSeleccionada, (nuevaCompra) => {
   if (nuevaCompra) {
-    console.log("Cargando compra seleccionada:", nuevaCompra);
-
-    // Convierte '2025-05-13 11:07:12.919417' a '2025-05-13T11:07'
-    let fechaFormateada = '';
-    if (typeof nuevaCompra.fecha === 'string') {
-      const [fecha, hora] = nuevaCompra.fecha.split(' ');
-      if (fecha && hora) {
-        const horaLimpiada = hora.slice(0, 5); // HH:MM
-        fechaFormateada = `${fecha}T${horaLimpiada}`;
-      }
-    } else if (nuevaCompra.fecha instanceof Date) {
-      fechaFormateada = nuevaCompra.fecha.toISOString().slice(0, 16);
-    }
-
     compraParaEditar.value = {
       ...nuevaCompra,
       proveedores: nuevaCompra.proveedores || [
         { id: nuevaCompra.id_proveedor, nombre: nuevaCompra.nombre_proveedor }
       ],
-      productoSeleccionado: nuevaCompra.productos?.[0]?.nombre || null,
-      cantidad: nuevaCompra.productos?.[0]?.cantidad || 1,
       productos: nuevaCompra.productos?.map(producto => ({
         ...producto,
         id_producto: producto.id_producto || producto.id || null
       })) || [],
-      fecha: fechaFormateada
     };
-
-    console.log("Productos cargados en la compra:", compraParaEditar.value.productos);
+    cargarProductosProveedor();
   }
 }, { immediate: true });
 
-
-
-
-// Watch para depurar qué producto se está seleccionando
-watch(() => compraParaEditar.value.productoSeleccionado, (nuevoNombre) => {
-  console.log("Producto seleccionado nombre:", nuevoNombre);
-
-  const seleccionado = compraParaEditar.value.productos.find(
-    p => p.nombre === nuevoNombre
-  );
-
-  if (seleccionado) {
-    console.log("Producto seleccionado:", seleccionado);  // Log de producto seleccionado
-  } else {
-    console.warn("Producto no encontrado con nombre:", nuevoNombre);
+const cargarProductosProveedor = async () => {
+  if (!compraParaEditar.value.id_proveedor) return;
+  try {
+    productosProveedor.value = await invoke("obtener_productos_proveedor", {
+      proveedorId: compraParaEditar.value.id_proveedor,
+    });
+  } catch (err) {
+    productosProveedor.value = [];
   }
-});
-
-const guardarCambios = async () => {
-  // Actualiza la cantidad en el producto seleccionado
-  const producto = compraParaEditar.value.productos.find(
-    p => p.nombre === compraParaEditar.value.productoSeleccionado
-  );
-  if (producto) {
-    producto.cantidad = compraParaEditar.value.cantidad;
-  }
-
-  const detalles = compraParaEditar.value.productos.map(p => {
-    console.log("Producto antes de procesar:", p);
-
-    const idProducto = p.id_producto || p.id;
-    console.log("id_producto para el producto:", idProducto);
-
-    if (!idProducto) {
-      console.error("Falta id_producto para el producto:", p);
-      return null;
-    }
-
-    const cantidad = Number(p.cantidad);
-    const precioUnitario = Number(p.precio_unitario);
-    if (isNaN(cantidad) || isNaN(precioUnitario)) {
-      console.error("Cantidad o precio_unitario no válidos para el producto:", p);
-      return null;
-    }
-
-    // Eliminado el formateo de la fecha - se usa el valor directamente
-   return {
-  id_compra: compraParaEditar.value.id,
-  fecha: compraParaEditar.value.fecha.replace('T', ' ') + ':00',
-  id_proveedor: compraParaEditar.value.id_proveedor,
-  total: Number(compraParaEditar.value.total),
-  id_producto: idProducto,
-  nombre_producto: p.nombre,
-  cantidad: cantidad,
-  precio_unitario: precioUnitario
 };
 
-  }).filter(d => d !== null);
+watch(() => compraParaEditar.value.id_proveedor, () => {
+  cargarProductosProveedor();
+});
 
-  if (detalles.length === 0) {
-    console.error("No hay detalles válidos para actualizar.");
-    return;
+const agregarProducto = () => {
+  if (!productoSeleccionado.value || cantidad.value <= 0) return;
+  const producto = productosProveedor.value.find(p => (p.id_producto || p.id) === productoSeleccionado.value);
+  if (!producto) return;
+  const indexExistente = compraParaEditar.value.productos.findIndex(
+    d => Number(d.id_producto) === Number(producto.id_producto || producto.id)
+  );
+  if (indexExistente >= 0) {
+    compraParaEditar.value.productos[indexExistente].cantidad += cantidad.value;
+  } else {
+    compraParaEditar.value.productos.push({
+      id_producto: producto.id_producto || producto.id,
+      nombre: producto.producto || producto.nombre,
+      cantidad: cantidad.value,
+      precio_unitario: producto.precio_unitario,
+    });
   }
+  productoSeleccionado.value = "";
+  cantidad.value = 1;
+};
 
-  console.log("Enviando detalles actualizados:", detalles);
+const eliminarProducto = (index) => {
+  compraParaEditar.value.productos.splice(index, 1);
+};
 
+const totalCompra = computed(() =>
+  compraParaEditar.value.productos.reduce((acc, d) => acc + d.cantidad * d.precio_unitario, 0).toFixed(2)
+);
+
+function formatearFecha(fechaStr) {
+  const fecha = typeof fechaStr === 'string' ? new Date(fechaStr) : fechaStr;
+  const yyyy = fecha.getFullYear();
+  const mm = String(fecha.getMonth() + 1).padStart(2, '0');
+  const dd = String(fecha.getDate()).padStart(2, '0');
+  const hh = String(fecha.getHours()).padStart(2, '0');
+  const min = String(fecha.getMinutes()).padStart(2, '0');
+  const ss = String(fecha.getSeconds()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+}
+
+const guardarCambios = async () => {
   try {
-    await invoke('actualizar_compra', { detalles });
+    const fechaFormateada = formatearFecha(compraParaEditar.value.fecha);
+    await invoke('actualizar_compra', {
+      detalles: compraParaEditar.value.productos.map(detalle => ({
+        id_compra: compraParaEditar.value.id,
+        fecha: fechaFormateada,
+        id_proveedor: compraParaEditar.value.id_proveedor,
+        total: parseFloat(totalCompra.value), // ← AGREGA ESTE CAMPO
+        id_producto: Number(detalle.id_producto),
+        nombre_producto: detalle.nombre,
+        cantidad: Number(detalle.cantidad),
+        precio_unitario: Number(detalle.precio_unitario),
+      })),
+    });
+    emit('guardar', {
+      ...compraParaEditar.value,
+      total: parseFloat(totalCompra.value),
+      productos: [...compraParaEditar.value.productos]
+    });
     cerrarModal();
     emit('refresh');
   } catch (error) {
@@ -235,19 +199,14 @@ const guardarCambios = async () => {
   }
 };
 
-
-
-
 const cerrarModal = () => {
   emit('cerrar');
-
 };
+
 </script>
 
-
-
-
 <style scoped>
+/* Usa los mismos estilos que ModalAgregarCompras.vue para coherencia */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -261,7 +220,6 @@ const cerrarModal = () => {
   z-index: 1000;
   backdrop-filter: blur(3px);
 }
-
 .modal-container {
   background-color: white;
   border-radius: 12px;
@@ -272,18 +230,10 @@ const cerrarModal = () => {
   overflow-y: auto;
   animation: modalFadeIn 0.3s ease-out;
 }
-
 @keyframes modalFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-20px);}
+  to { opacity: 1; transform: translateY(0);}
 }
-
 .modal-header {
   display: flex;
   justify-content: space-between;
@@ -291,14 +241,12 @@ const cerrarModal = () => {
   padding: 20px 25px;
   border-bottom: 1px solid #f0f0f0;
 }
-
 .modal-header h2 {
   margin: 0;
   font-size: 1.5rem;
   color: #2c3e50;
   font-weight: 600;
 }
-
 .close-btn {
   background: none;
   border: none;
@@ -308,43 +256,12 @@ const cerrarModal = () => {
   transition: color 0.2s;
   padding: 5px;
 }
-
-.close-btn:hover {
-  color: #e74c3c;
-}
-
-.modal-body {
-  padding: 25px;
-}
-
-.modal-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.form-group.full-width {
-  grid-column: 1 / -1;
-}
-
-.form-group label {
-  font-size: 0.9rem;
-  color: #34495e;
-  font-weight: 500;
-}
-
+.close-btn:hover { color: #e74c3c; }
+.modal-body { padding: 25px; }
+.modal-form { display: flex; flex-direction: column; gap: 20px; }
+.form-group { display: flex; flex-direction: column; gap: 8px; }
+.form-group.full-width { grid-column: 1 / -1; }
+.form-group label { font-size: 0.9rem; color: #34495e; font-weight: 500; }
 .form-input, .form-select {
   padding: 12px 15px;
   border: 1px solid #ddd;
@@ -352,74 +269,75 @@ const cerrarModal = () => {
   font-size: 0.95rem;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
-
 .form-input:focus, .form-select:focus {
   outline: none;
   border-color: #3498db;
   box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
-
-.checkbox-group {
-  flex-direction: row;
-  align-items: center;
-  margin-top: 10px;
+.agregar-producto-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 12px;
 }
-
-.checkbox-container {
+.cantidad-input { width: 80px; }
+.btn-agregar {
   display: flex;
   align-items: center;
+  gap: 6px;
+  font-size: 1rem;
+  padding: 10px 18px;
+}
+.productos-table-container { margin-top: 18px; }
+.productos-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.productos-table th, .productos-table td {
+  padding: 8px 10px;
+  text-align: left;
+}
+.productos-table th {
+  background: #e0e7ff;
+  color: #405890;
+  font-weight: 600;
+}
+.productos-table td { background: #fff; }
+.btn-eliminar {
+  color: #f44336;
+  background: none;
+  border: none;
   cursor: pointer;
-  position: relative;
-  user-select: none;
+  padding: 4px;
+  border-radius: 50%;
+  transition: background 0.2s;
 }
-
-.checkbox-container input {
-  position: absolute;
-  opacity: 0;
-  cursor: pointer;
-  height: 0;
-  width: 0;
+.btn-eliminar:hover { background: #ffeaea; }
+.total-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #405890;
+  margin-top: 6px;
 }
-
-.checkmark {
-  height: 20px;
-  width: 20px;
-  background-color: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  margin-right: 10px;
-  transition: background-color 0.2s;
+.total-valor {
+  color: #2196f3;
+  font-size: 1.2em;
 }
-
-.checkbox-container:hover input ~ .checkmark {
-  background-color: #f8f9fa;
+.fade-in-row {
+  animation: fadeIn 0.3s;
 }
-
-.checkbox-container input:checked ~ .checkmark {
-  background-color: #3498db;
-  border-color: #3498db;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px);}
+  to { opacity: 1; transform: translateY(0);}
 }
-
-.checkmark:after {
-  content: "";
-  position: absolute;
-  display: none;
-}
-
-.checkbox-container input:checked ~ .checkmark:after {
-  display: block;
-}
-
-.checkbox-container .checkmark:after {
-  left: 7px;
-  top: 3px;
-  width: 5px;
-  height: 10px;
-  border: solid white;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-
 .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -428,7 +346,6 @@ const cerrarModal = () => {
   border-top: 1px solid #f0f0f0;
   margin-top: 10px;
 }
-
 .btn {
   padding: 12px 20px;
   border-radius: 8px;
@@ -440,38 +357,19 @@ const cerrarModal = () => {
   transition: all 0.2s;
   border: none;
 }
-
 .btn-primary {
   background-color: #3498db;
   color: white;
 }
-
 .btn-primary:hover {
   background-color: #2980b9;
   transform: translateY(-1px);
 }
-
 .btn-secondary {
   background-color: #f8f9fa;
   color: #34495e;
 }
-
 .btn-secondary:hover {
   background-color: #e9ecef;
-}
-
-@media (max-width: 600px) {
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .form-actions {
-    flex-direction: column-reverse;
-  }
-  
-  .btn {
-    width: 100%;
-    justify-content: center;
-  }
 }
 </style>

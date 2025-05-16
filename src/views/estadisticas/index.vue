@@ -54,11 +54,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 // Puedes usar chart.js, apexcharts o vue-chart-3 para los componentes de gráficas
-import BarChart from '@/components/estadisticas/BarChart.vue';
-import BarChartHorizontal from '@/components/estadisticas/BarChartHorizontal.vue';
-import PieChart from '@/components/estadisticas/PieChart.vue';
+import BarChart from '../../components/BarChart.vue';
+
+
+import BarChartHorizontal from '../../components/BarChartHorizontal.vue';
+import PieChart from '../../components/PieChart.vue';
 import { invoke } from '@tauri-apps/api/core';
 
 const fechaDesde = ref('');
