@@ -1,407 +1,332 @@
 <template>
-    <div class="proveedores-container">
-      <div class="header">
-        <div class="header-content">
-          <h1>
-            <i class="fas fa-users-cog"></i> Administración de Proveedores
-          </h1>
-          <p class="subtitle">Gestiona tus proveedores y sus productos de manera eficiente</p>
-        </div>
-        <button @click="showNuevoProveedorModal = true" class="btn-primary">
-          <i class="fas fa-plus"></i> Nuevo Proveedor
-        </button>
+  <div class="proveedores-container">
+    <div class="header">
+      <div class="header-content">
+        <h1>
+          <i class="fas fa-users-cog"></i> Administración de Proveedores
+        </h1>
+        <p class="subtitle">Gestiona tus proveedores y sus productos de manera eficiente</p>
       </div>
-  
-      <div class="filtros-container">
-        <div class="search-box">
-          <input 
-            v-model="searchTerm" 
-            placeholder="Buscar proveedores o productos..." 
-           
-          >
-          <i class="fas fa-search"></i>
-        </div>
-        
-        <div class="filtros-avanzados">
-          <button @click="toggleFiltrosAvanzados" class="btn-secondary">
-            <i class="fas fa-filter"></i> Filtros
-          </button>
-          
-          <div v-if="mostrarFiltrosAvanzados" class="filtros-content">
-            <div class="filtro-group">
-              <label>Estado:</label>
-              <select v-model="filtroEstado">
-                <option value="todos">Todos</option>
-                <option value="activo">Activos</option>
-                <option value="inactivo">Inactivos</option>
-              </select>
-            </div>
-            
-            <div class="filtro-group">
-              <label>Contrato vigente:</label>
-              <select v-model="filtroContrato">
-                <option value="todos">Todos</option>
-                <option value="si">Con contrato</option>
-                <option value="no">Sin contrato</option>
-              </select>
-            </div>
-
-            
-          </div>
-        </div>
-      </div>
-  
-      <!-- Loading state -->
-      <div v-if="loading" class="loading-container">
-        <i class="fas fa-spinner fa-spin"></i> Cargando proveedores...
-      </div>
-  
-      <!-- Error state -->
-      <div v-if="error" class="error-container">
-        <i class="fas fa-exclamation-triangle"></i> {{ error }}
-        <button @click="cargarProveedores" class="btn-primary small">
-          Reintentar
-        </button>
-      </div>
-  
-      <div class="proveedores-grid">
-        <div v-if="proveedoresFiltrados.length === 0" class="no-results">
-          No se encontraron proveedores que coincidan con los criterios de búsqueda
-        </div>
-        <div v-else class="cards-grid">
-          <ProveedorCard
-            v-for="proveedor in proveedoresFiltrados"
-            :key="proveedor.id"
-            :proveedor="proveedor"
-            :isOpen="proveedor.id === proveedorAbierto"
-            @toggle="toggleAcordeon"
-            @edit="abrirEditarProveedor"
-            @delete="confirmarEliminarProveedor"
-            @view="verDetalleProveedor"
-           
-          />
-        </div>
-     
-      </div>
-  
-      <!-- Modales -->
-      <NuevoProveedorModal 
-        v-if="showNuevoProveedorModal"
-        @close="showNuevoProveedorModal = false"
-        @save="guardarNuevoProveedor"
-      />
-      
-      <EditarProveedorModal 
-        v-if="showEditarProveedorModal"
-        :proveedor="proveedorSeleccionado"
-        @close="showEditarProveedorModal = false"
-        @save="actualizarProveedor"
-      />
-      
-      <DetalleProveedorModal 
-        v-if="showDetalleProveedorModal"
-        :proveedor="proveedorSeleccionado"
-        @close="showDetalleProveedorModal = false"
-      />
-      
-      <ConfirmacionModal 
-        v-if="showConfirmacionModal"
-        :message="`¿Estás seguro de eliminar a ${proveedorSeleccionado?.nombre}?`"
-        @confirm="eliminarProveedor"
-        @cancel="showConfirmacionModal = false"
-      />
-  
-      <!-- Modal para productos del proveedor -->
-      <ProductosProveedorModal
-        v-if="showProductosProveedorModal"
-        :proveedor-id="proveedorSeleccionado?.id"
-        @close="showProductosProveedorModal = false"
-      />
-      
-      
+      <button @click="showNuevoProveedorModal = true" class="btn-primary">
+        <i class="fas fa-plus"></i> Nuevo Proveedor
+      </button>
     </div>
-  </template>
-  
-  <script>
-  import { invoke } from '@tauri-apps/api/core';
-  import { ref, onMounted, computed } from 'vue';
-  import ProveedorCard from './components/ProveedorCard.vue';
-  import NuevoProveedorModal from './components/NuevoProveedorModal.vue';
-  import EditarProveedorModal from './components/EditarProveedorModal.vue';
-  import DetalleProveedorModal from './components/DetalleProveedorModal.vue';
-  import ConfirmacionModal from './components/ConfirmacionModal.vue';
-  import ProductosProveedorModal from './components/ProductosProveedor.vue';
-  
-  
-  export default {
-    components: {
-      ProveedorCard,
-      NuevoProveedorModal,
-      EditarProveedorModal,
-      DetalleProveedorModal,
-      ConfirmacionModal,
-      ProductosProveedorModal,
-      
-    },
-  
-    setup() {
-      const proveedores = ref([]);
-      const proveedorSeleccionado = ref(null);
-      const searchTerm = ref('');
-      const filtroEstado = ref('todos');
-      const filtroContrato = ref('todos');
-      const mostrarFiltrosAvanzados = ref(false);
-      const loading = ref(false);
-      const error = ref(null);
-      const proveedorAbierto = ref(null);
-  
-      // Estados de modales
-      const showNuevoProveedorModal = ref(false);
-      const showEditarProveedorModal = ref(false);
-      const showDetalleProveedorModal = ref(false);
-      const showConfirmacionModal = ref(false);
-      const showProductosProveedorModal = ref(false);
-      
-  
-      // Obtener proveedores al cargar
-      onMounted(async () => {
-        await cargarProveedores();
-      });
-  
-      const cargarProveedores = async () => {
-  loading.value = true;
-  error.value = null;
-  try {
-    if (searchTerm.value.trim() === '') {
-      // Si no hay término de búsqueda, obtener todos los proveedores
-      proveedores.value = await invoke('obtener_proveedores');
-    } else {
-      // Si hay término de búsqueda, buscar tanto proveedores como productos
-      const [proveedoresDirectos, proveedoresPorProducto] = await Promise.all([
-        invoke('buscar_proveedores', { termino: searchTerm.value.trim() }),
-        invoke('buscar_proveedores_por_producto', { 
-          nombre_producto: searchTerm.value.trim() 
-        })
-      ]);
-      
-      // Combinar y eliminar duplicados
-      const todosProveedores = [...proveedoresDirectos, ...proveedoresPorProducto];
-      const idsUnicos = [...new Set(todosProveedores.map(p => p.id))];
-      proveedores.value = idsUnicos.map(id => 
-        todosProveedores.find(p => p.id === id)
-      );
-    }
-  } catch (err) {
-    console.error('Error al cargar proveedores:', err);
-    error.value = 'Error al cargar los proveedores. Por favor, intente nuevamente.';
-  } finally {
-    loading.value = false;
-  }
-};
-  
-      // Filtros computados
-      const proveedoresFiltrados = computed(() => {
-        return proveedores.value.filter((proveedor) => {
-          // Filtro por búsqueda (incluye productos)
-          const matchSearch =
-            proveedor.nombre.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-            (proveedor.contacto && proveedor.contacto.toLowerCase().includes(searchTerm.value.toLowerCase())) ||
-            (proveedor.email && proveedor.email.toLowerCase().includes(searchTerm.value.toLowerCase())) ||
-            (proveedor.productos && proveedor.productos.some(producto =>
-              producto.producto.toLowerCase().includes(searchTerm.value.toLowerCase())
-            ));
-  
-          // Filtro por estado
-          const matchEstado =
-            filtroEstado.value === 'todos' ||
-            (filtroEstado.value === 'activo' && proveedor.estado === 'activo') ||
-            (filtroEstado.value === 'inactivo' && proveedor.estado !== 'activo');
-  
-          // Filtro por contrato
-          const matchContrato =
-            filtroContrato.value === 'todos' ||
-            (filtroContrato.value === 'si' && proveedor.contrato_vigente) ||
-            (filtroContrato.value === 'no' && !proveedor.contrato_vigente);
-  
-          return matchSearch && matchEstado && matchContrato;
-        });
-      });
-  
-      const aplicarFiltros = () => {
-        // Este método se asegura de que los filtros se apliquen correctamente
-      };
 
-      const filtrarProveedores = () => {
-       
-
-      };
-  
-      const toggleFiltrosAvanzados = () => {
-        mostrarFiltrosAvanzados.value = !mostrarFiltrosAvanzados.value;
-      };
-  
-      // Métodos para acciones
-      const abrirEditarProveedor = (proveedor) => {
-        console.log('Proveedor seleccionado para editar. ID:', proveedor.id); // Log del ID del proveedor
-        proveedorSeleccionado.value = { ...proveedor };
-        showEditarProveedorModal.value = true;
-      };
-  
-      const actualizarProveedor = async (proveedorActualizado) => {
-        try {
-          if (!proveedorActualizado.id) {
-            throw new Error('El proveedor no tiene un ID válido.');
-          }
-  
-          console.log('Datos enviados al backend:', {
-            id: proveedorActualizado.id,
-            proveedor: proveedorActualizado,
-          });
-  
-          await invoke('actualizar_proveedor', {
-            id: proveedorActualizado.id,
-            proveedor: {
-              nombre: proveedorActualizado.nombre,
-              contacto: proveedorActualizado.contacto,
-              telefono: proveedorActualizado.telefono,
-              email: proveedorActualizado.email,
-              direccion: proveedorActualizado.direccion,
-              pais: proveedorActualizado.pais,
-              estado: proveedorActualizado.estado,
-              contrato_vigente: proveedorActualizado.contrato_vigente,
-            },
-          });
-  
-          await cargarProveedores();
+    <div class="filtros-container">
+      <div class="search-box">
+        <input 
+          v-model="searchTerm" 
+          placeholder="Buscar proveedores o productos..." 
+         
+        >
+        <i class="fas fa-search"></i>
+      </div>
+      
+      <div class="filtros-avanzados">
+        <button @click="toggleFiltrosAvanzados" class="btn-secondary">
+          <i class="fas fa-filter"></i> Filtros
+        </button>
+        
+        <div v-if="mostrarFiltrosAvanzados" class="filtros-content">
+          <div class="filtro-group">
+            <label>Estado:</label>
+            <select v-model="filtroEstado">
+              <option value="todos">Todos</option>
+              <option value="activo">Activos</option>
+              <option value="inactivo">Inactivos</option>
+            </select>
+          </div>
           
-          showEditarProveedorModal.value = false;
-        } catch (error) {
-          console.error('Error al actualizar proveedor:', error);
+          <div class="filtro-group">
+            <label>Contrato vigente:</label>
+            <select v-model="filtroContrato">
+              <option value="todos">Todos</option>
+              <option value="si">Con contrato</option>
+              <option value="no">Sin contrato</option>
+            </select>
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading state -->
+    <div v-if="loading" class="loading-container">
+      <i class="fas fa-spinner fa-spin"></i> Cargando proveedores...
+    </div>
+
+    <!-- Error state -->
+    <div v-if="error" class="error-container">
+      <i class="fas fa-exclamation-triangle"></i> {{ error }}
+      <button @click="cargarProveedores" class="btn-primary small">
+        Reintentar
+      </button>
+    </div>
+
+    <div class="proveedores-grid">
+      <div v-if="proveedoresFiltrados.length === 0" class="no-results">
+        No se encontraron proveedores que coincidan con los criterios de búsqueda
+      </div>
+      <div v-else class="cards-grid">
+        <ProveedorCard
+          v-for="proveedor in proveedoresFiltrados"
+          :key="proveedor.id"
+          :proveedor="proveedor"
+          :isOpen="proveedor.id === proveedorAbierto"
+          @toggle="toggleAcordeon"
+          @edit="abrirEditarProveedor"
+          @delete="confirmarEliminarProveedor"
+        />
+      </div>
+    </div>
+
+    <!-- Modales -->
+    <NuevoProveedorModal 
+      v-if="showNuevoProveedorModal"
+      @close="showNuevoProveedorModal = false"
+      @save="guardarNuevoProveedor"
+    />
+    
+    <EditarProveedorModal 
+      v-if="showEditarProveedorModal"
+      :proveedor="proveedorSeleccionado"
+      @close="showEditarProveedorModal = false"
+      @save="actualizarProveedor"
+    />
+    
+    <ConfirmacionModal 
+      v-if="showConfirmacionModal"
+      :message="`¿Estás seguro de eliminar a ${proveedorSeleccionado?.nombre}?`"
+      @confirm="eliminarProveedor"
+      @cancel="showConfirmacionModal = false"
+    />
+  </div>
+</template>
+
+<script>
+import { invoke } from '@tauri-apps/api/core';
+import { ref, onMounted, computed } from 'vue';
+import ProveedorCard from './components/ProveedorCard.vue';
+import NuevoProveedorModal from './components/NuevoProveedorModal.vue';
+import EditarProveedorModal from './components/EditarProveedorModal.vue';
+import ConfirmacionModal from './components/ConfirmacionModal.vue';
+
+export default {
+  components: {
+    ProveedorCard,
+    NuevoProveedorModal,
+    EditarProveedorModal,
+    ConfirmacionModal,
+  },
+
+  setup() {
+    const proveedores = ref([]);
+    const proveedorSeleccionado = ref(null);
+    const searchTerm = ref('');
+    const filtroEstado = ref('todos');
+    const filtroContrato = ref('todos');
+    const mostrarFiltrosAvanzados = ref(false);
+    const loading = ref(false);
+    const error = ref(null);
+    const proveedorAbierto = ref(null);
+
+    // Estados de modales
+    const showNuevoProveedorModal = ref(false);
+    const showEditarProveedorModal = ref(false);
+    const showConfirmacionModal = ref(false);
+
+    // Obtener proveedores al cargar
+    onMounted(async () => {
+      await cargarProveedores();
+    });
+
+    const cargarProveedores = async () => {
+loading.value = true;
+error.value = null;
+try {
+  if (searchTerm.value.trim() === '') {
+    // Si no hay término de búsqueda, obtener todos los proveedores
+    proveedores.value = await invoke('obtener_proveedores');
+  } else {
+    // Si hay término de búsqueda, buscar tanto proveedores como productos
+    const [proveedoresDirectos, proveedoresPorProducto] = await Promise.all([
+      invoke('buscar_proveedores', { termino: searchTerm.value.trim() }),
+      invoke('buscar_proveedores_por_producto', { 
+        nombre_producto: searchTerm.value.trim() 
+      })
+    ]);
+    
+    // Combinar y eliminar duplicados
+    const todosProveedores = [...proveedoresDirectos, ...proveedoresPorProducto];
+    const idsUnicos = [...new Set(todosProveedores.map(p => p.id))];
+    proveedores.value = idsUnicos.map(id => 
+      todosProveedores.find(p => p.id === id)
+    );
+  }
+} catch (err) {
+  console.error('Error al cargar proveedores:', err);
+  error.value = 'Error al cargar los proveedores. Por favor, intente nuevamente.';
+} finally {
+  loading.value = false;
+}
+};
+
+    // Filtros computados
+    const proveedoresFiltrados = computed(() => {
+      return proveedores.value.filter((proveedor) => {
+        // Filtro por búsqueda (incluye productos)
+        const matchSearch =
+          proveedor.nombre.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
+          (proveedor.contacto && proveedor.contacto.toLowerCase().includes(searchTerm.value.toLowerCase())) ||
+          (proveedor.email && proveedor.email.toLowerCase().includes(searchTerm.value.toLowerCase())) ||
+          (proveedor.productos && proveedor.productos.some(producto =>
+            producto.producto.toLowerCase().includes(searchTerm.value.toLowerCase())
+          ));
+
+        // Filtro por estado
+        const matchEstado =
+          filtroEstado.value === 'todos' ||
+          (filtroEstado.value === 'activo' && proveedor.estado === 'activo') ||
+          (filtroEstado.value === 'inactivo' && proveedor.estado !== 'activo');
+
+        // Filtro por contrato
+        const matchContrato =
+          filtroContrato.value === 'todos' ||
+          (filtroContrato.value === 'si' && proveedor.contrato_vigente) ||
+          (filtroContrato.value === 'no' && !proveedor.contrato_vigente);
+
+        return matchSearch && matchEstado && matchContrato;
+      });
+    });
+
+    const aplicarFiltros = () => {
+      // Este método se asegura de que los filtros se apliquen correctamente
+    };
+
+    const filtrarProveedores = () => {
+     
+
+    };
+    const toggleFiltrosAvanzados = () => {
+      mostrarFiltrosAvanzados.value = !mostrarFiltrosAvanzados.value;
+    };
+
+    // Métodos para acciones
+    const abrirEditarProveedor = (proveedor) => {
+      console.log('Proveedor seleccionado para editar. ID:', proveedor.id); // Log del ID del proveedor
+      proveedorSeleccionado.value = { ...proveedor };
+      showEditarProveedorModal.value = true;
+    };
+
+    const actualizarProveedor = async (proveedorActualizado) => {
+      try {
+        if (!proveedorActualizado.id) {
+          throw new Error('El proveedor no tiene un ID válido.');
         }
-      };
 
-      const guardarNuevoProveedor = async (nuevoProveedor) => {
-        try {
-          console.log('Datos enviados al backend para crear proveedor:', nuevoProveedor); // Depuración
+        console.log('Datos enviados al backend:', {
+          id: proveedorActualizado.id,
+          proveedor: proveedorActualizado,
+        });
 
-          // Elimina el campo `id` si está presente
-          const proveedorSinId = { ...nuevoProveedor };
-          delete proveedorSinId.id;
+        await invoke('actualizar_proveedor', {
+          id: proveedorActualizado.id,
+          proveedor: {
+            nombre: proveedorActualizado.nombre,
+            contacto: proveedorActualizado.contacto,
+            telefono: proveedorActualizado.telefono,
+            email: proveedorActualizado.email,
+            direccion: proveedorActualizado.direccion,
+            pais: proveedorActualizado.pais,
+            estado: proveedorActualizado.estado,
+            contrato_vigente: proveedorActualizado.contrato_vigente,
+          },
+        });
 
-          await invoke('crear_proveedor', { proveedor: proveedorSinId });
-          await cargarProveedores();
-          showNuevoProveedorModal.value = false;
-        } catch (error) {
-          console.error('Error al guardar el nuevo proveedor:', error);
-        }
-      };
-
-      const verDetalleProveedor = (proveedor) => {
-        console.log('Proveedor seleccionado para ver detalles:', proveedor); // Depuración
-
-        // Cierra cualquier modal abierto
-        showDetalleProveedorModal.value = false;
-        showProductosProveedorModal.value = false;
-
-        // Abre el modal de detalles para el proveedor seleccionado
-        proveedorSeleccionado.value = { ...proveedor };
-        showDetalleProveedorModal.value = true;
-      };
-
-      const confirmarEliminarProveedor = (proveedor) => {
-        console.log('Proveedor seleccionado para eliminar:', proveedor); // Depuración
-        proveedorSeleccionado.value = { ...proveedor };
-        showConfirmacionModal.value = true;
-      };
-
-      const eliminarProveedor = async () => {
-        try {
-          if (!proveedorSeleccionado.value?.id) {
-            throw new Error('No se ha seleccionado un proveedor válido para eliminar.');
-          }
-      
-          console.log('Eliminando proveedor con ID:', proveedorSeleccionado.value.id); // Depuración
-      
-          // Llamada al backend para eliminar el proveedor
-          await invoke('eliminar_proveedor', { id: proveedorSeleccionado.value.id });
-      
-          // Recargar la lista de proveedores
-          await cargarProveedores();
-      
-          // Cerrar el modal de confirmación
-          showConfirmacionModal.value = false;
-        } catch (error) {
-          console.error('Error al eliminar proveedor:', error);
-        }
-      };
-
-      const cargarProductos = async () => {
-        try {
-          productos.value = await invoke('obtener_productos_proveedor', {
-            proveedor_id: props.proveedorId,
-          });
-        } catch (error) {
-          console.error('Error al cargar productos:', error);
-        }
-      };
-
-      const agregarProducto = async (nuevoProducto) => {
-        try {
-          await invoke('agregar_producto_proveedor', {
-            producto: {
-              proveedor_id: props.proveedorId,
-              producto: nuevoProducto,
-            },
-          });
-          await cargarProductos();
-          showAgregarProducto.value = false;
-        } catch (error) {
-          console.error('Error al agregar producto:', error);
-        }
-      };
-
-      
-
-      const toggleAcordeon = (id) => {
-        proveedorAbierto.value = proveedorAbierto.value === id ? null : id;
-      };
-  
-      return {
-        proveedores,
-        proveedorSeleccionado,
-        searchTerm,
-        filtroEstado,
-        filtroContrato,
-        mostrarFiltrosAvanzados,
-        loading,
-        error,
-        showNuevoProveedorModal,
-        showEditarProveedorModal,
-        showDetalleProveedorModal,
-        showConfirmacionModal,
-        showProductosProveedorModal,
-       
-        proveedoresFiltrados,
-        aplicarFiltros,
+        await cargarProveedores();
         
-        toggleFiltrosAvanzados,
-        abrirEditarProveedor,
-        actualizarProveedor,
-        guardarNuevoProveedor,
-        verDetalleProveedor,
-        confirmarEliminarProveedor,
-        eliminarProveedor,
-        cargarProductos,
-        agregarProducto,
-        
-        proveedorAbierto,
-        toggleAcordeon,
-      };
-    },
-  };
-  </script>
-  
-  <style scoped>
+        showEditarProveedorModal.value = false;
+      } catch (error) {
+        console.error('Error al actualizar proveedor:', error);
+      }
+    };
+
+    const guardarNuevoProveedor = async (nuevoProveedor) => {
+      try {
+        console.log('Datos enviados al backend para crear proveedor:', nuevoProveedor); // Depuración
+
+        // Elimina el campo `id` si está presente
+        const proveedorSinId = { ...nuevoProveedor };
+        delete proveedorSinId.id;
+
+        await invoke('crear_proveedor', { proveedor: proveedorSinId });
+        await cargarProveedores();
+        showNuevoProveedorModal.value = false;
+      } catch (error) {
+        console.error('Error al guardar el nuevo proveedor:', error);
+      }
+    };
+
+    const confirmarEliminarProveedor = (proveedor) => {
+      console.log('Proveedor seleccionado para eliminar:', proveedor); // Depuración
+      proveedorSeleccionado.value = { ...proveedor };
+      showConfirmacionModal.value = true;
+    };
+
+    const eliminarProveedor = async () => {
+      try {
+        if (!proveedorSeleccionado.value?.id) {
+          throw new Error('No se ha seleccionado un proveedor válido para eliminar.');
+        }
+    
+        console.log('Eliminando proveedor con ID:', proveedorSeleccionado.value.id); // Depuración
+    
+        // Llamada al backend para eliminar el proveedor
+        await invoke('eliminar_proveedor', { id: proveedorSeleccionado.value.id });
+    
+        // Recargar la lista de proveedores
+        await cargarProveedores();
+    
+        // Cerrar el modal de confirmación
+        showConfirmacionModal.value = false;
+      } catch (error) {
+        console.error('Error al eliminar proveedor:', error);
+      }
+    };
+
+    const toggleAcordeon = (id) => {
+      proveedorAbierto.value = proveedorAbierto.value === id ? null : id;
+    };
+
+    return {
+      proveedores,
+      proveedorSeleccionado,
+      searchTerm,
+      filtroEstado,
+      filtroContrato,
+      mostrarFiltrosAvanzados,
+      loading,
+      error,
+      showNuevoProveedorModal,
+      showEditarProveedorModal,
+      showConfirmacionModal,
+      proveedoresFiltrados,
+      aplicarFiltros,
+      toggleFiltrosAvanzados,
+      abrirEditarProveedor,
+      actualizarProveedor,
+      guardarNuevoProveedor,
+      confirmarEliminarProveedor,
+      eliminarProveedor,
+      proveedorAbierto,
+      toggleAcordeon,
+    };
+  },
+};
+</script>
+
+<style scoped>
 /* Contenedor principal */
 .proveedores-container {
   padding: 20px;
@@ -593,9 +518,6 @@
 .no-results {
   color: #6c757d;
 }
-
-
-
 
 /* Botones */
 .btn-primary {

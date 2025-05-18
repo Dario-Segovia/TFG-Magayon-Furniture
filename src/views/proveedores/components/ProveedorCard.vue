@@ -24,14 +24,27 @@
         <i class="fas fa-map-marker-alt"></i>
         <span>{{ proveedor.direccion }}</span>
       </div>
+      <div v-if="proveedor.pais" class="info-row">
+        <i class="fas fa-flag"></i>
+        <span>{{ proveedor.pais }}</span>
+      </div>
+      <div class="info-row">
+        <i class="fas fa-file-contract"></i>
+        <span>
+          Contrato: 
+          <span :class="proveedor.contrato_vigente ? 'contrato-vigente-text' : 'contrato-no-vigente-text'">
+            {{ proveedor.contrato_vigente ? 'Vigente' : 'No vigente' }}
+          </span>
+        </span>
+      </div>
     </div>
 
     <div class="card-actions">
       <button 
         @click="$emit('toggle', proveedor.id)" 
         class="btn-action view" 
-        title="Ver productos" 
-        aria-label="Ver productos"
+        title="Expandir/cerrar" 
+        aria-label="Expandir/cerrar"
       >
         <i class="fas" :class="isOpen ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
       </button>
@@ -52,34 +65,113 @@
         <i class="fas fa-trash"></i>
       </button>
     </div>
-
-    <div v-if="isOpen" class="productos-container open">
-      <ProductosProveedor :proveedorId="proveedor.id" />
+    <div v-if="isOpen" class="productos-list">
+      <div class="productos-header">
+        <strong>Productos</strong>
+        <button class="btn-add-producto" @click="abrirModalProducto()">
+          <i class="fas fa-plus"></i> Añadir producto
+        </button>
+      </div>
+      <table class="productos-table" v-if="productos && productos.length">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Precio</th>
+            <th>Categoría</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="prod in productos" :key="prod.id">
+            <td>{{ prod.producto }}</td>
+            <td>{{ prod.descripcion }}</td>
+            <td>${{ prod.precio_unitario }}</td>
+            <td>{{ prod.categoria }}</td>
+            <td>
+              <button class="btn-mini" @click="abrirModalProducto(prod)"><i class="fas fa-edit"></i></button>
+              <button class="btn-mini btn-danger" @click="confirmarEliminarProducto(prod)"><i class="fas fa-trash"></i></button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div v-else class="no-productos">Sin productos registrados.</div>
     </div>
+    <ProductoProveedorModal
+      v-if="showProductoModal"
+      :producto="productoEditando"
+      @close="cerrarModalProducto"
+      @save="guardarProducto"
+    />
+    <ConfirmacionModal
+      v-if="showEliminarProducto"
+      :message="`¿Eliminar el producto '${productoAEliminar?.producto}'?`"
+      @confirm="eliminarProducto"
+      @cancel="showEliminarProducto = false"
+    />
   </div>
 </template>
 
-<script>
-import ProductosProveedor from './ProductosProveedor.vue';
+<script setup>
+import { ref, watch } from 'vue';
+import { invoke } from '@tauri-apps/api/core';
+import ConfirmacionModal from './ConfirmacionModal.vue';
+import ProductoProveedorModal from './ProductoProveedorModal.vue';
 
-export default {
-  components: { ProductosProveedor },
-  props: {
-    proveedor: {
-      type: Object,
-      required: true,
-    },
-    isOpen: {
-      type: Boolean,
-      required: true,
-    },
-  },
-  methods: {
-    editarProveedor() {
-      this.$emit('edit', this.proveedor);
-    },
-  },
-};
+const props = defineProps({
+  proveedor: { type: Object, required: true },
+  isOpen: { type: Boolean, required: true },
+});
+const emit = defineEmits(['toggle', 'edit', 'delete']);
+
+const productos = ref([]);
+const showProductoModal = ref(false);
+const productoEditando = ref({});
+const showEliminarProducto = ref(false);
+const productoAEliminar = ref(null);
+
+watch(() => props.isOpen, async (open) => {
+  if (open) await cargarProductos();
+});
+
+async function cargarProductos() {
+  productos.value = await invoke('obtener_productos_proveedor', { proveedorId: props.proveedor.id });
+}
+
+function abrirModalProducto(prod = {}) {
+  productoEditando.value = { ...prod };
+  showProductoModal.value = true;
+}
+function cerrarModalProducto() {
+  showProductoModal.value = false;
+  productoEditando.value = {};
+}
+async function guardarProducto(producto) {
+  if (!producto.producto || !producto.precio_unitario) return;
+  if (producto.id) {
+    await invoke('eliminar_producto_proveedor', { id: producto.id });
+  }
+  await invoke('agregar_producto_proveedor', {
+    producto: {
+      ...producto,
+      proveedorId: props.proveedor.id,
+    }
+  });
+  await cargarProductos();
+  cerrarModalProducto();
+}
+function confirmarEliminarProducto(prod) {
+  productoAEliminar.value = prod;
+  showEliminarProducto.value = true;
+}
+async function eliminarProducto() {
+  await invoke('eliminar_producto_proveedor', { id: productoAEliminar.value.id });
+  await cargarProductos();
+  showEliminarProducto.value = false;
+}
+function editarProveedor() {
+  emit('edit', props.proveedor);
+}
 </script>
 
 <style scoped>
@@ -233,5 +325,98 @@ export default {
 .productos-container.open {
   max-height: 500px;
   opacity: 1;
+}
+
+.contrato-vigente-text {
+  color: #2196F3;
+  font-weight: bold;
+}
+
+.contrato-no-vigente-text {
+  color: #c62828;
+  font-weight: bold;
+}
+
+.productos-list {
+  margin-top: 15px;
+  background: #f9f9f9;
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.productos-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.productos-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+}
+
+.productos-table th,
+.productos-table td {
+  border: 1px solid #eee;
+  padding: 6px 10px;
+  font-size: 0.95em;
+}
+
+.btn-add-producto {
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 12px;
+  cursor: pointer;
+  font-size: 0.95em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-add-producto:hover {
+  background: #388e3c;
+}
+
+.btn-mini {
+  background: #e0e0e0;
+  border: none;
+  border-radius: 4px;
+  padding: 3px 8px;
+  margin-left: 2px;
+  cursor: pointer;
+  font-size: 0.95em;
+}
+
+.btn-mini.btn-danger {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.btn-mini.btn-success {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.producto-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.producto-form input {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  min-width: 90px;
+}
+
+.no-productos {
+  color: #888;
+  font-size: 0.95em;
+  padding: 8px 0;
 }
 </style>

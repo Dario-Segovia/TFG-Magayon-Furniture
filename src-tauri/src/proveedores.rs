@@ -147,6 +147,7 @@ pub async fn agregar_producto_proveedor(
 ) -> Result<(), String> {
     println!("Datos recibidos para agregar producto a proveedor: {:?}", producto);
 
+    // 1. Insertar en proveedor_productos
     sqlx::query(
         r#"
         INSERT INTO proveedor_productos 
@@ -165,6 +166,32 @@ pub async fn agregar_producto_proveedor(
         println!("Error al agregar producto al proveedor: {}", e);
         format!("Error al agregar producto al proveedor: {}", e)
     })?;
+
+    // 2. Comprobar si existe en inventario
+    let existe: Option<(i32,)> = sqlx::query_as(
+        "SELECT id FROM inventario WHERE LOWER(nombre) = LOWER($1) LIMIT 1"
+    )
+    .bind(&producto.producto)
+    .fetch_optional(&*pool)
+    .await
+    .map_err(|e| format!("Error al buscar en inventario: {}", e))?;
+
+    if existe.is_none() {
+        // 3. Si no existe, crear en inventario con cantidad 0
+        sqlx::query(
+            "INSERT INTO inventario (nombre, descripcion, cantidad, precio_unitario, categoria) VALUES ($1, $2, 0, $3, $4)"
+        )
+        .bind(&producto.producto)
+        .bind(&producto.descripcion)
+        .bind(producto.precio_unitario)
+        .bind(&producto.categoria)
+        .execute(&*pool)
+        .await
+        .map_err(|e| format!("Error al crear producto en inventario: {}", e))?;
+        println!("Producto creado en inventario automáticamente.");
+    } else {
+        println!("Producto ya existe en inventario, no se crea duplicado.");
+    }
 
     println!("Producto agregado correctamente al proveedor: id proveedor = {}", producto.proveedor_id);
     Ok(())

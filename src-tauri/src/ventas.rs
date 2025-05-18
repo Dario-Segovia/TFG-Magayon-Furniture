@@ -1,8 +1,8 @@
-use sqlx::postgres::PgRow;
+
 use tauri::State;
 use sqlx::{PgPool, Row};
 use rust_decimal::Decimal;
-use rust_decimal::prelude::*;
+
 use serde::{Deserialize, Serialize};
 use chrono::NaiveDateTime;
 
