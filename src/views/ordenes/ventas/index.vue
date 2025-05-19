@@ -267,7 +267,7 @@ const cancelarEdicion = () => {
 /* Estilos base */
 .inventario-container {
   padding: 20px;
-  max-width: 1100px;
+  max-width: 1800px;
   margin: 0 auto;
   background: #f4f7f9;
   border-radius: 10px;

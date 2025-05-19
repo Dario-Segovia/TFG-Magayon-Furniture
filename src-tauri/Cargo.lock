@@ -2409,6 +2409,7 @@ dependencies = [
  "chrono",
  "dotenvy",
  "dotenvy_macro",
+ "num-traits",
  "rust_decimal",
  "serde",
  "serde_json",

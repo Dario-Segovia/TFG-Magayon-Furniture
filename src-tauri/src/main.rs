@@ -11,10 +11,22 @@ mod build;
 mod clientes;
 mod compras;
 mod empleados;
+
 mod horarios;
 mod inventario;
 mod proveedores;
 mod ventas;
+mod estadisticas;  // Declara el módulo "estadisticas" (busca estadisticas/mod.rs)
+mod stats;
+
+// Para usar EstatEmpleados:
+use stats::stat_cliente;
+use stats::stat_empleado;
+use stats::stat_horario;
+use stats::stat_inventario;
+use stats::stat_proveedores;
+use stats::stat_ventas;
+use stats::stat_compras;
 
 // -----------------------------
 // FUNCIONES DE LOGIN
@@ -105,9 +117,47 @@ async fn main() {
             compras::crear_detalle_compra,
             compras::obtener_detalles_compra,
             compras::listar_proveedores,
-            
-            
-            
+            estadisticas::get_ventas_por_mes,
+            estadisticas::get_top_productos,
+            estadisticas::get_stock_critico,
+            estadisticas::get_ingresos_por_categoria,
+            estadisticas::get_ventas_y_clientes,
+            stat_cliente::obtener_total_clientes,
+            stat_cliente::clientes_por_provincia,
+            stat_cliente::clientes_por_ciudad,
+            stat_cliente::clientes_por_pais,
+            stat_empleado::empleados_totales,
+            stat_empleado::empleados_por_puesto,
+            stat_empleado::salario_promedio_por_puesto,
+            stat_empleado::salario_total,
+            stat_empleado::antiguedad_promedio,
+            stat_empleado::empleado_mayor_salario,
+            stat_empleado::contrataciones_ultimos_meses,
+            stat_empleado::contrataciones_por_anio,
+            stat_horario::resumen_horarios,
+            stat_horario::horas_por_empleado,
+            stat_horario::turnos_por_tipo,
+            stat_horario::turnos_por_empleado,
+            stat_inventario::inventario_resumen,
+            stat_inventario::stock_por_categoria,
+            stat_inventario::productos_criticos,
+            stat_inventario::productos_mas_caros,
+            stat_proveedores::proveedores_resumen,
+            stat_proveedores::proveedores_por_pais,
+            stat_proveedores::productos_por_proveedor,
+            stat_proveedores::productos_mas_caros_por_proveedor,
+            stat_ventas::ventas_resumen,
+            stat_ventas::ventas_por_mes,
+            stat_ventas::productos_mas_vendidos,
+            stat_ventas::clientes_top,
+            stat_compras::compras_resumen,
+            stat_compras::compras_por_mes,
+            stat_compras::productos_mas_comprados,
+            stat_compras::proveedores_top,
+
+
+
+
         ])
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");

@@ -22,8 +22,18 @@
         </i>
       </div>
       <div class="filtros-avanzados" style="position:relative;">
-        <button @click="mostrarFiltros = !mostrarFiltros">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><line x1="1" y1="14" x2="7" y2="14" stroke-width="2"/><line x1="9" y1="8" x2="15" y2="8" stroke-width="2"/><line x1="17" y1="16" x2="23" y2="16" stroke-width="2"/></svg>
+       <button @click="toggleFiltrosAvanzados">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
+          </svg>
           Filtros
         </button>
         <div v-if="mostrarFiltros" class="filtros-content">
@@ -121,6 +131,12 @@ function abrirEditarModal(compra) {
   showEditarModal.value = true;
 }
 
+
+// Agrega esta función en tu script setup
+function toggleFiltrosAvanzados() {
+  mostrarFiltros.value = !mostrarFiltros.value;
+}
+
 async function handleCompraActualizada(compraActualizada) {
   const fechaObj = new Date(compraActualizada.fecha);
   const fechaFormateada = `${fechaObj.getFullYear()}-${(fechaObj.getMonth() + 1).toString().padStart(2, '0')}-${fechaObj.getDate().toString().padStart(2, '0')} ${fechaObj.getHours().toString().padStart(2, '0')}:${fechaObj.getMinutes().toString().padStart(2, '0')}:${fechaObj.getSeconds().toString().padStart(2, '0')}`;
@@ -200,27 +216,15 @@ const comprasFiltradas = computed(() => {
 /* Estilos base */
 .inventario-container {
   padding: 20px;
-  max-width: 1100px;
+  max-width: 1800px;
   margin: 0 auto;
   background: #f4f7f9;
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
-/* Hacer que el modal ocupe toda la pantalla */
-.fullscreen-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* Fondo semitransparente */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999; /* Asegúrate de que esté por encima de otros elementos */
-  animation: fadeIn 0.5s;
-}
+
+
 
 .fullscreen-modal .modal-content {
   width: 90%; /* Ajusta el ancho según lo desees */
@@ -309,6 +313,11 @@ const comprasFiltradas = computed(() => {
   font-size: 1.2rem;
 }
 
+
+.filtros-avanzados {
+  position: relative;
+}
+
 .filtros-avanzados button {
   padding: 8px 15px;
   border: none;
@@ -344,6 +353,10 @@ const comprasFiltradas = computed(() => {
   margin-top: 5px;
 }
 
+.filtro-group {
+  margin-bottom: 12px;
+}
+
 .filtro-group label {
   display: block;
   margin-bottom: 5px;
@@ -351,7 +364,8 @@ const comprasFiltradas = computed(() => {
   color: #333;
 }
 
-.filtro-group select {
+.filtro-group select,
+.filtro-group input {
   width: 100%;
   padding: 8px;
   border-radius: 8px;
@@ -361,7 +375,8 @@ const comprasFiltradas = computed(() => {
   transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-.filtro-group select:focus {
+.filtro-group select:focus,
+.filtro-group input:focus {
   border-color: #4caf50;
   box-shadow: 0 4px 8px rgba(0,0,0,0.10);
   outline: none;

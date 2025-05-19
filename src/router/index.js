@@ -18,7 +18,41 @@ const routes = [
   { path: '/ordenes', name: 'ordenes', component: Ordenes },
   { path: '/proveedores', name: 'proveedores', component: Proveedores },
   { path: '/conversiones', name: 'conversiones', component: Conversiones },
-  { path: '/estadisticas', name: 'estadisticas', component: Estadisticas, meta: { requiresAdmin: true } }
+  { path: '/estadisticas', name: 'estadisticas', component: Estadisticas, meta: { requiresAdmin: true } },
+
+  {
+    path: '/estadisticas/clientes',
+    component: () => import('../views/estadisticas/components/clientes.vue'),
+  },
+  {
+    path: '/estadisticas/ventas',
+    component: () => import('../views/estadisticas/components/ventas.vue'),
+  },
+   {
+    path: '/estadisticas/empleados',
+    component: () => import('../views/estadisticas/components/empleados.vue'),
+  },
+  {
+    path: '/estadisticas/horarios',
+    component: () => import('../views/estadisticas/components/horarios.vue'),
+  },
+  {
+    path: '/estadisticas/inventario',
+    component: () => import('../views/estadisticas/components/inventario.vue'),
+  },
+   {
+    path: '/estadisticas/proveedores',
+    component: () => import('../views/estadisticas/components/proveedores.vue'),
+  },
+  {
+    path: '/estadisticas/ventas',
+    component: () => import('../views/estadisticas/components/ventas.vue'),
+  },
+   {
+    path: '/estadisticas/compras',
+    component: () => import('../views/estadisticas/components/compras.vue'),
+  },
+
 ];
 
 const router = createRouter({
