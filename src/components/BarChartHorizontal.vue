@@ -46,7 +46,7 @@ const chartOptions = ref({
   }
 });
 
-watch([props.labels, props.data], () => {
+watch([() => props.labels, () => props.data], () => {
   chartData.value = {
     labels: props.labels,
     datasets: [
@@ -60,6 +60,7 @@ watch([props.labels, props.data], () => {
     ]
   };
 });
+
 </script>
 
 <style scoped>

@@ -72,11 +72,11 @@
       <!-- Módulo Conversiones -->
       <div class="module-card" @click="goTo('conversiones')" v-if="canView('conversiones')">
         <div class="module-icon" style="background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);">
-          <i class="fas fa-exchange-alt"></i>
+          <i class="fa-solid fa-screwdriver-wrench"></i>
         </div>
         <div class="module-content">
-          <h3>Conversiones</h3>
-          <p>Herramienta para convertir unidades</p>
+          <h3>Utilidades</h3>
+          <p>Herramientas diversas de ayuda</p>
         </div>
         <div class="module-hover-effect"></div>
       </div>

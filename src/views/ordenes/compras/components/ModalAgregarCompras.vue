@@ -119,21 +119,33 @@ const cargarProductosProveedor = async () => {
   }
 };
 
-const agregarProducto = () => {
+const agregarProducto = async () => {
   if (!productoSeleccionado.value || cantidad.value <= 0) return;
-  const producto = productosProveedor.value.find(p => p.id === productoSeleccionado.value);
-  if (!producto) return;
+  const productoProveedor = productosProveedor.value.find(p => p.id === productoSeleccionado.value);
+  if (!productoProveedor) return;
+
+  // Buscar el producto en inventario por nombre y categoría
+  const inventario = await invoke('buscar_producto_inventario', {
+    nombre: productoProveedor.producto,
+    categoria: productoProveedor.categoria
+  });
+  if (!inventario || !inventario.id) {
+    errorMessage.value = "El producto no existe en inventario.";
+    return;
+  }
+
   const indexExistente = formData.value.detalles.findIndex(
-    d => d.id_producto === producto.id
+    d => d.id_producto === inventario.id
   );
   if (indexExistente >= 0) {
     formData.value.detalles[indexExistente].cantidad += Number(cantidad.value);
   } else {
     formData.value.detalles.push({
-      id_producto: producto.id,
-      nombre: producto.producto,
+      id_producto: inventario.id, // Usar el id de inventario
+      nombre: productoProveedor.producto,
+      categoria: productoProveedor.categoria,
       cantidad: Number(cantidad.value),
-      precio_unitario: Number(producto.precio_unitario), // ← asegúrate que es número
+      precio_unitario: Number(productoProveedor.precio_unitario),
     });
   }
   productoSeleccionado.value = "";
@@ -172,7 +184,8 @@ const handleSubmit = async () => {
         data: {
           id_compra: compraId,
           id_producto: Number(detalle.id_producto),
-          nombre: detalle.nombre, // ← CAMBIA ESTO
+          nombre: detalle.nombre,
+          categoria: detalle.categoria, // <-- AGREGA ESTA LÍNEA
           cantidad: Number(detalle.cantidad),
           precio_unitario: Number(detalle.precio_unitario),
         },

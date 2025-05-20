@@ -114,6 +114,7 @@ async fn main() {
             compras::listar_compras_con_proveedor,
             compras::obtener_productos_compra,
             compras::eliminar_compra,
+            compras::buscar_producto_inventario,
             compras::crear_detalle_compra,
             compras::obtener_detalles_compra,
             compras::listar_proveedores,

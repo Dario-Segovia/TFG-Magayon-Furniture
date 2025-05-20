@@ -73,7 +73,7 @@ pub struct DetalleCompraData {
 
     // Nuevos campos para crear el producto en inventario si no existe
     pub nombre: String,
-    pub descripcion: Option<String>,
+    
     pub categoria: Option<String>,
 }
 
@@ -149,7 +149,7 @@ pub async fn crear_detalle_compra(
     pool: State<'_, PgPool>,
     data: DetalleCompraData,
 ) -> Result<(), String> {
-    // Intentar encontrar el producto por nombre y categoría
+    // Buscar el producto por nombre y categoría
     let producto_id: Option<i32> = sqlx::query_scalar(
         r#"
         SELECT id FROM inventario
@@ -162,25 +162,14 @@ pub async fn crear_detalle_compra(
     .await
     .map_err(|e| format!("Error al buscar producto en inventario: {}", e))?;
 
-    // Si no existe, insertarlo en inventario
+    // Si no existe, devolver error
     let final_id_producto = match producto_id {
         Some(id) => id,
         None => {
-            let row = sqlx::query(
-                r#"
-                INSERT INTO inventario (nombre, descripcion, cantidad, precio_unitario, categoria)
-                VALUES ($1, $2, 0, $3, $4)
-                RETURNING id
-                "#
-            )
-            .bind(&data.nombre)
-            .bind(&data.descripcion)
-            .bind(data.precio_unitario)
-            .bind(&data.categoria)
-            .fetch_one(&*pool)
-            .await
-            .map_err(|e| format!("Error al insertar nuevo producto en inventario: {}", e))?;
-            row.get("id")
+            return Err(format!(
+                "El producto '{}' (categoría: {:?}) no existe en inventario.",
+                data.nombre, data.categoria
+            ));
         }
     };
 
@@ -385,12 +374,28 @@ pub async fn actualizar_compra(
     // 2. Insertar los nuevos detalles
     let mut total = 0.0; // Variable para acumular el total
     for detalle in &detalles {
-        // Insertamos cada detalle
+        // Verifica que el producto existe en inventario
+        let producto_existe: bool = sqlx::query_scalar(
+            "SELECT EXISTS(SELECT 1 FROM inventario WHERE id = $1)"
+        )
+        .bind(detalle.id_producto)
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(|e| format!("Error verificando producto en inventario: {}", e))?;
+
+        if !producto_existe {
+            return Err(format!(
+                "El producto con ID {} no existe en inventario. No se puede agregar a la compra.",
+                detalle.id_producto
+            ));
+        }
+
+        // Insertar el detalle de la compra
         sqlx::query(
             r#"
             INSERT INTO detalle_compras (id_compra, id_producto, cantidad, precio_unitario)
             VALUES ($1, $2, $3, $4)
-            "#,
+            "#
         )
         .bind(compra_id)
         .bind(detalle.id_producto)
@@ -400,7 +405,6 @@ pub async fn actualizar_compra(
         .await
         .map_err(|e| format!("Error insertando detalle: {}", e))?;
 
-        // Calculamos el total
         total += detalle.cantidad as f64 * detalle.precio_unitario;
     }
 
@@ -473,4 +477,37 @@ pub async fn obtener_detalles_compra(
     .map_err(|e| format!("Error obteniendo detalles de la compra: {}", e))?;
 
     Ok(rows)
+}
+
+
+#[tauri::command]
+pub async fn buscar_producto_inventario(
+    pool: State<'_, PgPool>,
+    nombre: String,
+    categoria: Option<String>,
+) -> Result<Option<InventarioItem>, String> {
+    let item = sqlx::query_as!(
+        InventarioItem,
+        r#"
+        SELECT id, nombre, descripcion, cantidad, precio_unitario, categoria
+        FROM inventario
+        WHERE nombre = $1 AND categoria = $2
+        "#,
+        nombre,
+        categoria
+    )
+    .fetch_optional(&*pool)
+    .await
+    .map_err(|e| format!("Error buscando producto en inventario: {}", e))?;
+    Ok(item)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct InventarioItem {
+    pub id: i32,
+    pub nombre: String,
+    pub descripcion: Option<String>,
+    pub cantidad: i32,
+    pub precio_unitario: rust_decimal::Decimal,
+    pub categoria: Option<String>,
 }

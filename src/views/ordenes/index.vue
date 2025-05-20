@@ -1,4 +1,5 @@
 <template>
+ 
   <div class="app-container">
     <!-- Contenido principal -->
     <div class="main-content">
@@ -155,5 +156,26 @@ const vistaActual = ref('compras')
 
 ::-webkit-scrollbar-thumb:hover {
   background: #a1a1a1;
+}
+
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: none;
+  color: #2b4583;
+  font-size: 1.08rem;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 8px;
+  margin-bottom: 18px;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+.btn-back:hover {
+  background: #e9ecef;
+  color: #1a2b4c;
 }
 </style>

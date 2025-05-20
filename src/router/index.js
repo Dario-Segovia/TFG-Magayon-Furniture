@@ -6,8 +6,8 @@ import Inventario from '../views/inventario/index.vue';
 import Clientes from '../views/clientes/index.vue';
 import Ordenes from '../views/ordenes/index.vue';
 import Proveedores from '../views/proveedores/index.vue';
-import Conversiones from '../views/Conversiones.vue';
-import Estadisticas from '../views/estadisticas/index.vue';
+import Conversiones from '../views/Utilidades/Utilidades.vue';
+import Estadisticas from '../views/estadisticas/Dashboard.vue';
 
 const routes = [
   { path: '/', component: Login },

@@ -132,21 +132,35 @@ watch(() => compraParaEditar.value.id_proveedor, () => {
   cargarProductosProveedor();
 });
 
-const agregarProducto = () => {
+const agregarProducto = async () => {
   if (!productoSeleccionado.value || cantidad.value <= 0) return;
-  const producto = productosProveedor.value.find(p => (p.id_producto || p.id) === productoSeleccionado.value);
-  if (!producto) return;
+  const productoProveedor = productosProveedor.value.find(
+    p => (p.id_producto || p.id) === productoSeleccionado.value
+  );
+  if (!productoProveedor) return;
+
+  // Buscar el producto en inventario por nombre y categoría
+  const inventario = await invoke('buscar_producto_inventario', {
+    nombre: productoProveedor.producto || productoProveedor.nombre,
+    categoria: productoProveedor.categoria
+  });
+  if (!inventario || !inventario.id) {
+    errorMessage.value = "El producto no existe en inventario.";
+    return;
+  }
+
   const indexExistente = compraParaEditar.value.productos.findIndex(
-    d => Number(d.id_producto) === Number(producto.id_producto || producto.id)
+    d => Number(d.id_producto) === Number(inventario.id)
   );
   if (indexExistente >= 0) {
     compraParaEditar.value.productos[indexExistente].cantidad += cantidad.value;
   } else {
     compraParaEditar.value.productos.push({
-      id_producto: producto.id_producto || producto.id,
-      nombre: producto.producto || producto.nombre,
+      id_producto: inventario.id, // Usar el id de inventario
+      nombre: productoProveedor.producto || productoProveedor.nombre,
+      categoria: productoProveedor.categoria,
       cantidad: cantidad.value,
-      precio_unitario: producto.precio_unitario,
+      precio_unitario: productoProveedor.precio_unitario,
     });
   }
   productoSeleccionado.value = "";

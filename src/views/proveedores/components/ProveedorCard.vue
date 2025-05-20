@@ -68,9 +68,14 @@
     <div v-if="isOpen" class="productos-list">
       <div class="productos-header">
         <strong>Productos</strong>
-        <button class="btn-add-producto" @click="abrirModalProducto()">
-          <i class="fas fa-plus"></i> Añadir producto
-        </button>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-add-producto" @click="abrirModalProducto()">
+            <i class="fas fa-plus"></i> Añadir producto
+          </button>
+          <button class="btn-add-producto" @click="abrirModalInventario()">
+            <i class="fas fa-box"></i> Añadir desde inventario
+          </button>
+        </div>
       </div>
       <table class="productos-table" v-if="productos && productos.length">
         <thead>
@@ -109,6 +114,11 @@
       @confirm="eliminarProducto"
       @cancel="showEliminarProducto = false"
     />
+    <InventarioSelectorModal
+      v-if="showInventarioModal"
+      @close="cerrarModalInventario"
+      @select="agregarProductoDesdeInventario"
+    />
   </div>
 </template>
 
@@ -117,6 +127,7 @@ import { ref, watch } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 import ConfirmacionModal from './ConfirmacionModal.vue';
 import ProductoProveedorModal from './ProductoProveedorModal.vue';
+import InventarioSelectorModal from './InventarioSelectorModal.vue';
 
 const props = defineProps({
   proveedor: { type: Object, required: true },
@@ -129,6 +140,7 @@ const showProductoModal = ref(false);
 const productoEditando = ref({});
 const showEliminarProducto = ref(false);
 const productoAEliminar = ref(null);
+const showInventarioModal = ref(false);
 
 watch(() => props.isOpen, async (open) => {
   if (open) await cargarProductos();
@@ -171,6 +183,25 @@ async function eliminarProducto() {
 }
 function editarProveedor() {
   emit('edit', props.proveedor);
+}
+function abrirModalInventario() {
+  showInventarioModal.value = true;
+}
+function cerrarModalInventario() {
+  showInventarioModal.value = false;
+}
+async function agregarProductoDesdeInventario(producto) {
+  await invoke('agregar_producto_proveedor', {
+    producto: {
+      producto: producto.nombre,
+      descripcion: producto.descripcion,
+      precio_unitario: producto.precio_unitario,
+      categoria: producto.categoria,
+      proveedorId: props.proveedor.id,
+    }
+  });
+  await cargarProductos();
+  cerrarModalInventario();
 }
 </script>
 
@@ -361,7 +392,7 @@ function editarProveedor() {
 .productos-table td {
   border: 1px solid #eee;
   padding: 6px 10px;
-  font-size: 0.95em;
+  font-size: 0.90em;
 }
 
 .btn-add-producto {
@@ -371,7 +402,7 @@ function editarProveedor() {
   border-radius: 6px;
   padding: 5px 12px;
   cursor: pointer;
-  font-size: 0.95em;
+  font-size: 0.73em;
   display: flex;
   align-items: center;
   gap: 5px;

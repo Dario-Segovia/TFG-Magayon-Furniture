@@ -1,4 +1,7 @@
 <template>
+  <button class="btn-back" @click="$router.back()">
+  <i class="fas fa-arrow-left"></i> Atrás
+</button>
   <div class="inventario-container">
     <!-- Encabezado -->
 <div class="header">

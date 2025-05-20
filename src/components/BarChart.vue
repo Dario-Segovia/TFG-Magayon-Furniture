@@ -17,7 +17,7 @@ const props = defineProps({
     type: Array,
     required: true
   },
-  data: {
+  datasets: {
     type: Array,
     required: true
   }
@@ -25,15 +25,7 @@ const props = defineProps({
 
 const chartData = ref({
   labels: props.labels,
-  datasets: [
-    {
-      label: 'Datos',
-      data: props.data,
-      backgroundColor: 'rgba(75, 192, 192, 0.2)',
-      borderColor: 'rgba(75, 192, 192, 1)',
-      borderWidth: 1
-    }
-  ]
+  datasets: props.datasets
 });
 
 const chartOptions = ref({
@@ -45,22 +37,19 @@ const chartOptions = ref({
   }
 });
 
-watch([props.labels, props.data], () => {
+watch([() => props.labels, () => props.datasets], () => {
   chartData.value = {
     labels: props.labels,
-    datasets: [
-      {
-        label: 'Datos',
-        data: props.data,
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        borderColor: 'rgba(75, 192, 192, 1)',
-        borderWidth: 1
-      }
-    ]
+    datasets: props.datasets
   };
 });
 </script>
 
 <style scoped>
-/* Puedes agregar estilo aquí si lo deseas */
+.pie-container {
+  width: 300px;
+  height: 300px;
+  position: relative;
+}
+
 </style>

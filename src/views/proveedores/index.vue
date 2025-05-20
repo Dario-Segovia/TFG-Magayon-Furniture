@@ -1,4 +1,7 @@
 <template>
+  <button class="btn-back" @click="$router.back()">
+  <i class="fas fa-arrow-left"></i> Atrás
+</button>
   <div class="proveedores-container">
     <div class="header">
       <div class="header-content">
@@ -577,5 +580,26 @@ try {
   100% {
     transform: rotate(359deg);
   }
+}
+
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: none;
+  color: #2b4583;
+  font-size: 1.08rem;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 8px;
+  margin-bottom: 18px;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+.btn-back:hover {
+  background: #e9ecef;
+  color: #1a2b4c;
 }
 </style>

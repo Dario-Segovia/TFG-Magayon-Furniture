@@ -1,4 +1,7 @@
 <template>
+  <button class="btn-back" @click="$router.back()">
+  <i class="fas fa-arrow-left"></i> Atrás
+</button>
   <div class="inventario-container">
     <div class="header fade-in">
       <div class="header-content">
@@ -346,5 +349,26 @@ const eliminarItem = async () => {
   background: linear-gradient(135deg, #9375FE, #EA6E6E);
   transform: translateY(-2px);
   box-shadow: 0 6px 10px rgba(0,0,0,0.15);
+}
+
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: none;
+  color: #2b4583;
+  font-size: 1.08rem;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 8px;
+  margin-bottom: 18px;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+.btn-back:hover {
+  background: #e9ecef;
+  color: #1a2b4c;
 }
 </style>

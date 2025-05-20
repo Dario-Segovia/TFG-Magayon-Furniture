@@ -1,7 +1,12 @@
 <template>
+  <!-- Botón atrás -->
+        <button class="btn-back" @click="goBack">
+          <i class="fas fa-arrow-left"></i> Atrás
+        </button>
   <div class="agenda-container">
     <div class="header">
       <div class="header-content">
+        
         <h1>
           <i class="fas fa-calendar-alt"></i> Agenda y Utilidades Profesionales
         </h1>
@@ -12,8 +17,43 @@
     </div>
 
     <div class="dashboard-grid">
-      <!-- Agenda de tareas -->
-      <div class="dashboard-card tareas-card">
+      <div class="dashboard-card card-btn" @click="abrirModal('tareas')">
+        <i class="fas fa-tasks card-icon"></i>
+        <span>Tareas</span>
+      </div>
+      <div class="dashboard-card card-btn" @click="abrirModal('eventos')">
+        <i class="fas fa-calendar card-icon"></i>
+        <span>Eventos</span>
+      </div>
+      <div class="dashboard-card card-btn" @click="abrirModal('apuntes')">
+        <i class="fas fa-sticky-note card-icon"></i>
+        <span>Apuntes</span>
+      </div>
+      <div class="dashboard-card card-btn" @click="abrirModal('unidades')">
+        <i class="fas fa-ruler-combined card-icon"></i>
+        <span>Conversor de Unidades</span>
+      </div>
+      <div class="dashboard-card card-btn" @click="abrirModal('calculadora')">
+        <i class="fas fa-calculator card-icon"></i>
+        <span>Calculadora Rápida</span>
+      </div>
+      <div class="dashboard-card card-btn" @click="abrirModal('retales')">
+        <i class="fas fa-cut card-icon"></i>
+        <span>Calculadora de Retales</span>
+      </div>
+      <div class="dashboard-card card-btn" @click="abrirModal('tapizado')">
+        <i class="fas fa-couch card-icon"></i>
+        <span>Coste de Tapizado</span>
+      </div>
+      <div class="dashboard-card card-btn" @click="abrirModal('metros')">
+        <i class="fas fa-ruler-horizontal card-icon"></i>
+        <span>ML a M²</span>
+      </div>
+    </div>
+
+    <!-- MODAL REUTILIZABLE -->
+    <ModalReutilizable :visible="!!modalAbierto" :onClose="cerrarModal">
+      <template v-if="modalAbierto === 'tareas'">
         <h2><i class="fas fa-tasks"></i> Tareas</h2>
         <div class="tareas-input">
           <input v-model="nuevaTarea" class="form-input" placeholder="Nueva tarea..." @keyup.enter="agregarTarea" />
@@ -26,10 +66,8 @@
             <button class="btn btn-delete" @click="eliminarTarea(idx)">🗑️</button>
           </li>
         </ul>
-      </div>
-
-      <!-- Agenda de eventos -->
-      <div class="dashboard-card eventos-card">
+      </template>
+      <template v-else-if="modalAbierto === 'eventos'">
         <h2><i class="fas fa-calendar"></i> Eventos</h2>
         <div class="eventos-input">
           <input v-model="nuevoEvento.titulo" class="form-input" placeholder="Título del evento" />
@@ -43,10 +81,8 @@
             <button class="btn btn-delete" @click="eliminarEvento(idx)">🗑️</button>
           </li>
         </ul>
-      </div>
-
-      <!-- Apuntes rápidos con historial y búsqueda -->
-      <div class="dashboard-card apuntes-card">
+      </template>
+      <template v-else-if="modalAbierto === 'apuntes'">
         <h2><i class="fas fa-sticky-note"></i> Apuntes</h2>
         <input v-model="busquedaApuntes" class="form-input" placeholder="Buscar apunte..." />
         <textarea v-model="nuevoApunte" class="form-textarea" rows="3" placeholder="Escribe un apunte y pulsa Guardar"></textarea>
@@ -58,10 +94,8 @@
             <button class="btn btn-delete" @click="eliminarApunte(idx)">🗑️</button>
           </li>
         </ul>
-      </div>
-
-      <!-- Conversor de unidades -->
-      <div class="dashboard-card conversiones-card">
+      </template>
+      <template v-else-if="modalAbierto === 'unidades'">
         <h2><i class="fas fa-ruler-combined"></i> Conversor de Unidades</h2>
         <div class="form-group">
           <input v-model.number="valorUnidad" type="number" class="form-input" placeholder="Valor" />
@@ -77,20 +111,16 @@
           <span v-if="conversionValida">{{ valorConvertido }} {{ unidadDestino }}</span>
           <span v-else class="error-text">Conversión no soportada</span>
         </div>
-      </div>
-
-      <!-- Calculadora rápida -->
-      <div class="dashboard-card calculadora-card">
+      </template>
+      <template v-else-if="modalAbierto === 'calculadora'">
         <h2><i class="fas fa-calculator"></i> Calculadora Rápida</h2>
         <input v-model="expresion" class="form-input" placeholder="Ej: (2.5*3) + 12/4" @keyup.enter="calcular" />
         <button class="btn btn-primary" @click="calcular">Calcular</button>
         <div class="resultado-calculadora">
           <span v-if="resultadoCalculadora !== null">= {{ resultadoCalculadora }}</span>
         </div>
-      </div>
-
-      <!-- Calculadora de retales -->
-      <div class="dashboard-card retales-card">
+      </template>
+      <template v-else-if="modalAbierto === 'retales'">
         <h2><i class="fas fa-cut"></i> Calculadora de Retales</h2>
         <div class="form-group">
           <input v-model.number="largoTotal" type="number" class="form-input" placeholder="Largo total (cm)" />
@@ -101,10 +131,8 @@
             Puedes cortar <b>{{ retalesCalculados }}</b> retales de {{ largoRetal }}cm
           </span>
         </div>
-      </div>
-
-      <!-- Calculadora de tapizado -->
-      <div class="dashboard-card tapizado-card">
+      </template>
+      <template v-else-if="modalAbierto === 'tapizado'">
         <h2><i class="fas fa-couch"></i> Coste de Tapizado</h2>
         <div class="form-group">
           <input v-model.number="metrosTela" type="number" class="form-input" placeholder="Metros de tela" />
@@ -116,10 +144,8 @@
             Coste total: <b>{{ costeTapizado }} €</b>
           </span>
         </div>
-      </div>
-
-      <!-- Conversor metros lineales a metros cuadrados -->
-      <div class="dashboard-card metros-card">
+      </template>
+      <template v-else-if="modalAbierto === 'metros'">
         <h2><i class="fas fa-ruler-horizontal"></i> ML a M²</h2>
         <div class="form-group">
           <input v-model.number="metrosLineales" type="number" class="form-input" placeholder="Metros lineales" />
@@ -130,13 +156,15 @@
             <b>{{ metrosCuadrados }}</b> m²
           </span>
         </div>
-      </div>
-    </div>
+      </template>
+    </ModalReutilizable>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch} from 'vue';
+import { ref, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import ModalReutilizable from './ModalReutilizable.vue';
 
 // --- Agenda de tareas ---
 const tareas = ref(JSON.parse(localStorage.getItem('tareas_sofa') || '[]'));
@@ -272,6 +300,20 @@ const metrosCuadrados = computed(() => {
   }
   return null;
 });
+
+const modalAbierto = ref(null);
+
+function abrirModal(nombre) {
+  modalAbierto.value = nombre;
+}
+function cerrarModal() {
+  modalAbierto.value = null;
+}
+
+const router = useRouter();
+function goBack() {
+  router.back();
+}
 </script>
 
 <style scoped>
@@ -291,6 +333,11 @@ const metrosCuadrados = computed(() => {
   color: white;
   box-shadow: 0 4px 12px rgba(0,0,0,0.10);
 }
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 .header-content h1 {
   margin: 0;
   font-size: 2rem;
@@ -303,6 +350,25 @@ const metrosCuadrados = computed(() => {
   font-size: 1.1rem;
   color: #e0f7e9;
 }
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: none;
+  color: #2b4583;
+  font-size: 1.08rem;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 8px;
+  margin-bottom: 18px;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+.btn-back:hover {
+  background: #e9ecef;
+  color: #1a2b4c;
+}
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -312,19 +378,61 @@ const metrosCuadrados = computed(() => {
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  padding: 22px 18px;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
   min-height: 220px;
+  overflow: hidden;
 }
-.dashboard-card h2 {
-  margin: 0 0 10px 0;
-  font-size: 1.25em;
+.dashboard-card.card-btn {
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  min-height: 140px;
+  text-align: center;
+  transition: box-shadow 0.2s, transform 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.dashboard-card.card-btn:hover {
+  box-shadow: 0 4px 16px rgba(52,152,219,0.15);
+  transform: translateY(-2px) scale(1.03);
+  background: #f8f9fa;
+}
+.dashboard-card details {
+  width: 100%;
+}
+.dashboard-card summary {
+  font-size: 1.15em;
+  font-weight: 600;
   color: #405890;
+  padding: 18px 18px 12px 18px;
+  cursor: pointer;
+  outline: none;
   display: flex;
   align-items: center;
   gap: 8px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #f8f9fa;
+  border-radius: 12px 12px 0 0;
+  transition: background 0.2s;
+}
+.dashboard-card details[open] summary {
+  background: #e9ecef;
+}
+.card-content {
+  padding: 16px 18px 18px 18px;
+  max-height: 320px;
+  overflow-y: auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tareas-lista, .apuntes-lista, .eventos-lista {
+  max-height: 120px;
+  overflow-y: auto;
 }
 .form-group {
   display: flex;
@@ -433,5 +541,25 @@ const metrosCuadrados = computed(() => {
   display: flex;
   gap: 8px;
   margin-bottom: 8px;
+}
+.dashboard-card.card-btn {
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  min-height: 140px;
+  text-align: center;
+  transition: box-shadow 0.2s, transform 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.dashboard-card.card-btn:hover {
+  box-shadow: 0 4px 16px rgba(52,152,219,0.15);
+  transform: translateY(-2px) scale(1.03);
+  background: #f8f9fa;
+}
+.card-icon {
+  font-size: 2.5rem;
+  color: #2b4583;
 }
 </style>
