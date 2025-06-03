@@ -29,3 +29,8 @@ chrono = { version = "0.4", features = ["serde"] }
 rust_decimal = { version = "1", features = ["serde"] } # <--- SOLO este es necesario para Decimal
 dotenvy_macro = "0.15"
 num-traits = "0.2.19"
+calamine = "0.25.0"
+tauri-plugin-fs = "2"
+dirs = "4"
+quick-xml = { version = "0.31", features = ["serialize"] }
+

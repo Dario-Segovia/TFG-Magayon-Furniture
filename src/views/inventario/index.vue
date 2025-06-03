@@ -1,17 +1,25 @@
 <template>
   <button class="btn-back" @click="$router.back()">
-  <i class="fas fa-arrow-left"></i> Atrás
-</button>
+    <i class="fas fa-arrow-left"></i> Atrás
+  </button>
   <div class="inventario-container">
     <div class="header fade-in">
       <div class="header-content">
-        <h1>
-          <i class="fas fa-boxes"></i> Inventario
-        </h1>
+        <h1><i class="fas fa-boxes"></i> Inventario</h1>
         <p class="subtitle">Gestiona los productos y existencias de tu inventario</p>
       </div>
       <button @click="showAgregar = true" class="btn-primary">
         <i class="fas fa-plus"></i> Nuevo Ítem
+      </button>
+      <input
+        ref="inputArchivo"
+        type="file"
+        accept=".xml"
+        style="display: none"
+        @change="onArchivoSeleccionado"
+      />
+      <button @click="abrirSelectorArchivo" class="btn-primary" style="margin-left: 10px;">
+        <i class="fas fa-file-import"></i> Importar XML
       </button>
     </div>
 
@@ -62,16 +70,25 @@
       @close="itemEliminar = null"
       @confirm="eliminarItem"
     />
+    <ModalImportarInventario
+      v-if="abrirImportar"
+      @close="abrirImportar = false"
+      @importar="importarArchivo"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
+import { writeFile, readFile, BaseDirectory } from '@tauri-apps/plugin-fs';
+
+
 import InventarioCard from './components/InventarioCard.vue';
 import ModalAgregarInventario from './components/ModalAgregarInventario.vue';
 import ModalEditarInventario from './components/ModalEditarInventario.vue';
 import ModalEliminarInventario from './components/ModalEliminarInventario.vue';
+
 
 const items = ref([]);
 const loading = ref(false);
@@ -80,23 +97,22 @@ const error = ref(null);
 const showAgregar = ref(false);
 const itemEditar = ref(null);
 const itemEliminar = ref(null);
+const abrirImportar = ref(false);
 
 const searchTerm = ref('');
+const inputArchivo = ref(null);
 
 const cargarInventario = async () => {
   loading.value = true;
   error.value = null;
-  console.log('Cargando inventario...');
   try {
     const resItems = await invoke('get_inventory');
-    console.log('Respuesta get_inventory:', resItems);
     items.value = resItems;
   } catch (e) {
     console.error('Error al cargar inventario:', e);
     error.value = 'Error al cargar inventario';
   } finally {
     loading.value = false;
-    console.log('Carga de inventario finalizada');
   }
 };
 
@@ -110,10 +126,9 @@ const itemsFiltrados = computed(() => {
 });
 
 const agregarItem = async (nuevo) => {
-  console.log('Intentando agregar ítem:', nuevo);
   try {
     await invoke('add_inventory_item', {
-      item: {  // Envía los parámetros dentro de un objeto "item"
+      item: {
         nombre: nuevo.nombre,
         descripcion: nuevo.descripcion,
         cantidad: nuevo.cantidad,
@@ -121,7 +136,6 @@ const agregarItem = async (nuevo) => {
         categoria: nuevo.categoria,
       }
     });
-    console.log('Ítem agregado correctamente');
     showAgregar.value = false;
     await cargarInventario();
   } catch (e) {
@@ -131,15 +145,14 @@ const agregarItem = async (nuevo) => {
 };
 
 const abrirEditar = (item) => {
-  console.log('Abriendo modal de edición para:', item);
   itemEditar.value = { ...item };
 };
+
 const editarItem = async (editado) => {
-  console.log('Intentando editar ítem:', editado);
   try {
     await invoke('update_inventory_item', {
       id: editado.id,
-      item: {  // Envía los demás campos dentro de un objeto 'item'
+      item: {
         nombre: editado.nombre,
         descripcion: editado.descripcion,
         cantidad: editado.cantidad,
@@ -147,7 +160,6 @@ const editarItem = async (editado) => {
         categoria: editado.categoria
       }
     });
-    console.log('Ítem editado correctamente');
     itemEditar.value = null;
     await cargarInventario();
   } catch (e) {
@@ -157,14 +169,12 @@ const editarItem = async (editado) => {
 };
 
 const abrirEliminar = (item) => {
-  console.log('Abriendo modal de eliminación para:', item);
   itemEliminar.value = item;
 };
+
 const eliminarItem = async () => {
-  console.log('Intentando eliminar ítem:', itemEliminar.value);
   try {
     await invoke('delete_inventory_item', { id: itemEliminar.value.id });
-    console.log('Ítem eliminado correctamente');
     itemEliminar.value = null;
     await cargarInventario();
   } catch (e) {
@@ -172,7 +182,38 @@ const eliminarItem = async () => {
     error.value = 'Error al eliminar ítem';
   }
 };
+
+const importarArchivo = async (archivo) => {
+  try {
+    loading.value = true;
+    error.value = null;
+
+    const text = await archivo.text();
+
+    await invoke('importar_inventario_xml', { xmlData: text });
+
+    abrirImportar.value = false;
+    await cargarInventario();
+  } catch (e) {
+    console.error('Error al importar archivo:', e);
+    error.value = 'Error al importar archivo';
+  } finally {
+    loading.value = false;
+  }
+};
+
+const abrirSelectorArchivo = () => {
+  inputArchivo.value.click();
+};
+
+const onArchivoSeleccionado = (e) => {
+  const archivo = e.target.files[0];
+  if (archivo) {
+    importarArchivo(archivo);
+  }
+};
 </script>
+
 
 <style scoped>
 .inventario-container {

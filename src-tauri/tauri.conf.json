@@ -8,17 +8,14 @@
     "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
-    
-   
-
-    
   },
+
   "app": {
     "windows": [
       {
         "title": "magayon-furniture",
-        "width": 800,
-        "height": 600
+        "width": 1920,
+        "height": 1080
       }
     ],
     "security": {
@@ -35,10 +32,7 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
-  
-    
-      
-    
-  
   }
-}
+  }
+  
+

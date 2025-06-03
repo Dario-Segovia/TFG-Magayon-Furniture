@@ -2,6 +2,9 @@ use sqlx::{PgPool, Row, postgres::PgRow};
 use tauri::State;
 use serde::{Serialize, Deserialize};
 use rust_decimal::Decimal;
+use quick_xml::de::from_str;
+use serde::de::{self, Deserializer};
+
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct InventarioItem {
@@ -14,14 +17,20 @@ pub struct InventarioItem {
     pub categoria: Option<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct InventoryItemInput {
-    nombre: String,
-    descripcion: Option<String>,
-    cantidad: i32,
-    #[serde(alias = "precioUnitario")]
-    precio_unitario: Decimal,
-    categoria: Option<String>,
+    pub nombre: String,
+    pub descripcion: Option<String>,
+    pub cantidad: i32,
+    #[serde(alias = "precioUnitario", deserialize_with = "deserialize_decimal_from_str")]
+    pub precio_unitario: Decimal,
+    pub categoria: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct InventarioXml {
+    #[serde(rename = "item")]
+    pub items: Vec<InventoryItemInput>,
 }
 
 #[tauri::command]
@@ -120,3 +129,44 @@ pub async fn delete_inventory_item(id: i32, pool: State<'_, PgPool>) -> Result<(
 
     Ok(())
 }
+
+#[tauri::command]
+pub async fn importar_inventario_xml(
+    xml_data: String,
+    pool: State<'_, PgPool>,
+) -> Result<(), String> {
+    println!("XML recibido: {}", xml_data);
+
+    // Prueba directa de deserialización
+    match from_str::<InventarioXml>(&xml_data) {
+        Ok(inventario) => {
+            println!("Deserialización exitosa: {:?}", inventario);
+            for item in inventario.items {
+                let query = "INSERT INTO public.inventario (nombre, descripcion, cantidad, precio_unitario, categoria) VALUES ($1, $2, $3, $4, $5)";
+                sqlx::query(query)
+                    .bind(item.nombre)
+                    .bind(item.descripcion)
+                    .bind(item.cantidad)
+                    .bind(item.precio_unitario)
+                    .bind(item.categoria)
+                    .execute(&*pool)
+                    .await
+                    .map_err(|e| e.to_string())?;
+            }
+            Ok(())
+        }
+        Err(e) => {
+            println!("Error de deserialización: {:?}", e);
+            Err(format!("Error de deserialización: {}", e))
+        }
+    }
+}
+
+fn deserialize_decimal_from_str<'de, D>(deserializer: D) -> Result<Decimal, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    Decimal::from_str_exact(&s).map_err(de::Error::custom)
+}
+
