@@ -1,14 +1,13 @@
 <template>
   <!-- Botón atrás -->
-        <button class="btn-back" @click="goBack">
-          <i class="fas fa-arrow-left"></i> Atrás
-        </button>
+  <button class="btn-back" @click="goBack">
+    <i class="fas fa-arrow-left"></i> Atrás
+  </button>
   <div class="agenda-container">
     <div class="header">
       <div class="header-content">
-        
         <h1>
-          <i class="fas fa-calendar-alt"></i> Agenda y Utilidades Profesionales
+          <i class="fas fa-calendar-alt"></i> Utilidades Profesionales
         </h1>
         <p class="subtitle">
           Herramientas, apuntes y agenda para la gestión diaria de tu empresa de sofás
@@ -17,165 +16,145 @@
     </div>
 
     <div class="dashboard-grid">
-      <div class="dashboard-card card-btn" @click="abrirModal('tareas')">
+      <div class="dashboard-card card-btn" @click="modalAbierto = 'tareas'">
         <i class="fas fa-tasks card-icon"></i>
         <span>Tareas</span>
       </div>
-      <div class="dashboard-card card-btn" @click="abrirModal('eventos')">
+      <div class="dashboard-card card-btn" @click="modalAbierto = 'eventos'">
         <i class="fas fa-calendar card-icon"></i>
         <span>Eventos</span>
       </div>
-      <div class="dashboard-card card-btn" @click="abrirModal('apuntes')">
-        <i class="fas fa-sticky-note card-icon"></i>
-        <span>Apuntes</span>
-      </div>
-      <div class="dashboard-card card-btn" @click="abrirModal('unidades')">
+     
+      <div class="dashboard-card card-btn" @click="modalAbierto = 'unidades'">
         <i class="fas fa-ruler-combined card-icon"></i>
         <span>Conversor de Unidades</span>
       </div>
-      <div class="dashboard-card card-btn" @click="abrirModal('calculadora')">
+      <div class="dashboard-card card-btn" @click="modalAbierto = 'calculadora'">
         <i class="fas fa-calculator card-icon"></i>
         <span>Calculadora Rápida</span>
       </div>
-      <div class="dashboard-card card-btn" @click="abrirModal('retales')">
+      <div class="dashboard-card card-btn" @click="modalAbierto = 'retales'">
         <i class="fas fa-cut card-icon"></i>
         <span>Calculadora de Retales</span>
       </div>
-      <div class="dashboard-card card-btn" @click="abrirModal('tapizado')">
+      <div class="dashboard-card card-btn" @click="modalAbierto = 'tapizado'">
         <i class="fas fa-couch card-icon"></i>
         <span>Coste de Tapizado</span>
       </div>
-      <div class="dashboard-card card-btn" @click="abrirModal('metros')">
+      <div class="dashboard-card card-btn" @click="modalAbierto = 'metros'">
         <i class="fas fa-ruler-horizontal card-icon"></i>
         <span>ML a M²</span>
       </div>
     </div>
 
-    <!-- MODAL REUTILIZABLE -->
-    <ModalReutilizable :visible="!!modalAbierto" :onClose="cerrarModal">
-      <template v-if="modalAbierto === 'tareas'">
-        <h2><i class="fas fa-tasks"></i> Tareas</h2>
-        <div class="tareas-input">
-          <input v-model="nuevaTarea" class="form-input" placeholder="Nueva tarea..." @keyup.enter="agregarTarea" />
-          <button class="btn btn-primary" @click="agregarTarea">Añadir</button>
-        </div>
-        <ul class="tareas-lista">
-          <li v-for="(tarea, idx) in tareas" :key="idx" :class="{ completada: tarea.completada }">
-            <input type="checkbox" v-model="tarea.completada" />
-            <span>{{ tarea.texto }}</span>
-            <button class="btn btn-delete" @click="eliminarTarea(idx)">🗑️</button>
-          </li>
-        </ul>
-      </template>
-      <template v-else-if="modalAbierto === 'eventos'">
-        <h2><i class="fas fa-calendar"></i> Eventos</h2>
-        <div class="eventos-input">
-          <input v-model="nuevoEvento.titulo" class="form-input" placeholder="Título del evento" />
-          <input v-model="nuevoEvento.fecha" type="date" class="form-input" />
-          <button class="btn btn-primary" @click="agregarEvento">Añadir</button>
-        </div>
-        <ul class="eventos-lista">
-          <li v-for="(evento, idx) in eventosOrdenados" :key="idx">
-            <span class="evento-fecha">{{ evento.fecha }}</span>
-            <span class="evento-titulo">{{ evento.titulo }}</span>
-            <button class="btn btn-delete" @click="eliminarEvento(idx)">🗑️</button>
-          </li>
-        </ul>
-      </template>
-      <template v-else-if="modalAbierto === 'apuntes'">
-        <h2><i class="fas fa-sticky-note"></i> Apuntes</h2>
-        <input v-model="busquedaApuntes" class="form-input" placeholder="Buscar apunte..." />
-        <textarea v-model="nuevoApunte" class="form-textarea" rows="3" placeholder="Escribe un apunte y pulsa Guardar"></textarea>
-        <button class="btn btn-secondary" @click="guardarApunte">Guardar Apunte</button>
-        <ul class="apuntes-lista">
-          <li v-for="(apunte, idx) in apuntesFiltrados" :key="idx">
-            <span class="apunte-fecha">{{ apunte.fecha }}</span>
-            <span class="apunte-texto">{{ apunte.texto }}</span>
-            <button class="btn btn-delete" @click="eliminarApunte(idx)">🗑️</button>
-          </li>
-        </ul>
-      </template>
-      <template v-else-if="modalAbierto === 'unidades'">
-        <h2><i class="fas fa-ruler-combined"></i> Conversor de Unidades</h2>
-        <div class="form-group">
-          <input v-model.number="valorUnidad" type="number" class="form-input" placeholder="Valor" />
-          <select v-model="unidadOrigen" class="form-select">
-            <option v-for="u in unidades" :key="u" :value="u">{{ u }}</option>
-          </select>
-          <span class="arrow">→</span>
-          <select v-model="unidadDestino" class="form-select">
-            <option v-for="u in unidades" :key="u" :value="u">{{ u }}</option>
-          </select>
-        </div>
-        <div class="resultado-conversion">
-          <span v-if="conversionValida">{{ valorConvertido }} {{ unidadDestino }}</span>
-          <span v-else class="error-text">Conversión no soportada</span>
-        </div>
-      </template>
-      <template v-else-if="modalAbierto === 'calculadora'">
-        <h2><i class="fas fa-calculator"></i> Calculadora Rápida</h2>
-        <input v-model="expresion" class="form-input" placeholder="Ej: (2.5*3) + 12/4" @keyup.enter="calcular" />
-        <button class="btn btn-primary" @click="calcular">Calcular</button>
-        <div class="resultado-calculadora">
-          <span v-if="resultadoCalculadora !== null">= {{ resultadoCalculadora }}</span>
-        </div>
-      </template>
-      <template v-else-if="modalAbierto === 'retales'">
-        <h2><i class="fas fa-cut"></i> Calculadora de Retales</h2>
-        <div class="form-group">
-          <input v-model.number="largoTotal" type="number" class="form-input" placeholder="Largo total (cm)" />
-          <input v-model.number="largoRetal" type="number" class="form-input" placeholder="Largo de cada retal (cm)" />
-        </div>
-        <div class="resultado-retales">
-          <span v-if="retalesCalculados !== null">
-            Puedes cortar <b>{{ retalesCalculados }}</b> retales de {{ largoRetal }}cm
-          </span>
-        </div>
-      </template>
-      <template v-else-if="modalAbierto === 'tapizado'">
-        <h2><i class="fas fa-couch"></i> Coste de Tapizado</h2>
-        <div class="form-group">
-          <input v-model.number="metrosTela" type="number" class="form-input" placeholder="Metros de tela" />
-          <input v-model.number="precioTela" type="number" class="form-input" placeholder="Precio por metro (€)" />
-          <input v-model.number="manoObra" type="number" class="form-input" placeholder="Mano de obra (€)" />
-        </div>
-        <div class="resultado-tapizado">
-          <span v-if="costeTapizado !== null">
-            Coste total: <b>{{ costeTapizado }} €</b>
-          </span>
-        </div>
-      </template>
-      <template v-else-if="modalAbierto === 'metros'">
-        <h2><i class="fas fa-ruler-horizontal"></i> ML a M²</h2>
-        <div class="form-group">
-          <input v-model.number="metrosLineales" type="number" class="form-input" placeholder="Metros lineales" />
-          <input v-model.number="anchoTela" type="number" class="form-input" placeholder="Ancho de tela (cm)" />
-        </div>
-        <div class="resultado-metros">
-          <span v-if="metrosCuadrados !== null">
-            <b>{{ metrosCuadrados }}</b> m²
-          </span>
-        </div>
-      </template>
-    </ModalReutilizable>
+    <!-- MODALES INDIVIDUALES -->
+<ModalTareas
+  v-if="modalAbierto === 'tareas'"
+  :visible="modalAbierto === 'tareas'"
+  :onClose="() => modalAbierto = null"
+  :tareas="tareas"
+  :nuevaTarea="nuevaTarea"
+  :agregarTarea="agregarTarea"
+  :eliminarTarea="eliminarTarea"
+/>
+<ModalEventos
+  v-if="modalAbierto === 'eventos'"
+  :visible="modalAbierto === 'eventos'"
+  :onClose="() => modalAbierto = null"
+  :eventosOrdenados="eventosOrdenados"
+  v-model:nuevoEvento="nuevoEvento"
+  :agregarEvento="agregarEvento"
+  :eliminarEvento="eliminarEvento"
+/>
+<ModalApuntes
+  v-if="modalAbierto === 'apuntes'"
+  :visible="modalAbierto === 'apuntes'"
+  :onClose="() => modalAbierto = null"
+  v-model:busquedaApuntes="busquedaApuntes"
+  v-model:nuevoApunte="nuevoApunte"
+  :guardarApunte="guardarApunte"
+  :apuntesFiltrados="apuntesFiltrados"
+  :eliminarApunte="eliminarApunte"
+/>
+<ModalUnidades
+  v-if="modalAbierto === 'unidades'"
+  :visible="modalAbierto === 'unidades'"
+  :onClose="() => modalAbierto = null"
+  v-model:valorUnidad="valorUnidad"
+  v-model:unidadOrigen="unidadOrigen"
+  v-model:unidadDestino="unidadDestino"
+  :unidades="unidades"
+  :conversionValida="conversionValida"
+  :valorConvertido="valorConvertido"
+/>
+<ModalCalculadora
+  v-if="modalAbierto === 'calculadora'"
+  :visible="modalAbierto === 'calculadora'"
+  :onClose="() => modalAbierto = null"
+  :expresion="expresion"
+  :calcular="calcular"
+  :resultadoCalculadora="resultadoCalculadora"
+/>
+<ModalRetales
+  v-if="modalAbierto === 'retales'"
+  :visible="modalAbierto === 'retales'"
+  :onClose="() => modalAbierto = null"
+  v-model:largoTotal="largoTotal"
+  v-model:largoRetal="largoRetal"
+  :retalesCalculados="retalesCalculados"
+/>
+<ModalTapizado
+  v-if="modalAbierto === 'tapizado'"
+  :visible="modalAbierto === 'tapizado'"
+  :onClose="() => modalAbierto = null"
+  v-model:metrosTela="metrosTela"
+  v-model:precioTela="precioTela"
+    
+  v-model:manoObra="manoObra"
+  :costeTapizado="costeTapizado"
+/>
+<ModalMetros
+  v-if="modalAbierto === 'metros'"
+  :visible="modalAbierto === 'metros'"
+  :onClose="() => modalAbierto = null"
+  v-model:metrosLineales="metrosLineales"
+  v-model:anchoTela="anchoTela"
+  :metrosCuadrados="metrosCuadrados"
+/>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import ModalReutilizable from './ModalReutilizable.vue';
+import ModalTareas from './ModalTareas.vue';
+import ModalEventos from './ModalEventos.vue';
+
+import ModalUnidades from './ModalUnidades.vue';
+import ModalCalculadora from './ModalCalculadora.vue';
+import ModalRetales from './ModalRetales.vue';
+import ModalTapizado from './ModalTapizado.vue';
+import ModalMetros from './ModalMetros.vue';
+
+// Variables de visibilidad para cada modal
+const showTareas = ref(false);
+const showEventos = ref(false);
+const showApuntes = ref(false);
+const showUnidades = ref(false);
+const showCalculadora = ref(false);
+const showRetales = ref(false);
+const showTapizado = ref(false);
+const showMetros = ref(false);
+const modalAbierto = ref(null); // Puede ser: 'tareas', 'eventos', 'apuntes', 'unidades', 'calculadora', 'retales', 'tapizado', 'metros'
 
 // --- Agenda de tareas ---
 const tareas = ref(JSON.parse(localStorage.getItem('tareas_sofa') || '[]'));
 const nuevaTarea = ref('');
-function agregarTarea() {
-  if (nuevaTarea.value.trim()) {
-    tareas.value.push({ texto: nuevaTarea.value, completada: false });
-    nuevaTarea.value = '';
-    guardarTareas();
-  }
+function agregarTarea(texto) {
+  tareas.value.push({ id: Date.now() + Math.random(), texto, completada: false });
+  guardarTareas();
 }
+
 function eliminarTarea(idx) {
   tareas.value.splice(idx, 1);
   guardarTareas();
@@ -183,15 +162,16 @@ function eliminarTarea(idx) {
 function guardarTareas() {
   localStorage.setItem('tareas_sofa', JSON.stringify(tareas.value));
 }
-watch(tareas, guardarTareas, { deep: true });
 
 // --- Agenda de eventos ---
 const eventos = ref(JSON.parse(localStorage.getItem('eventos_sofa') || '[]'));
 const nuevoEvento = ref({ titulo: '', fecha: '' });
 function agregarEvento() {
-  if (nuevoEvento.value.titulo && nuevoEvento.value.fecha) {
+  if (nuevoEvento.value && nuevoEvento.value.titulo && nuevoEvento.value.fecha) {
     eventos.value.push({ ...nuevoEvento.value });
-    nuevoEvento.value = { titulo: '', fecha: '' };
+    // En vez de reasignar el objeto, resetea sus propiedades:
+    nuevoEvento.value.titulo = '';
+    nuevoEvento.value.fecha = '';
     guardarEventos();
   }
 }
@@ -205,7 +185,6 @@ function guardarEventos() {
 const eventosOrdenados = computed(() =>
   [...eventos.value].sort((a, b) => a.fecha.localeCompare(b.fecha))
 );
-watch(eventos, guardarEventos, { deep: true });
 
 // --- Apuntes rápidos con historial y búsqueda ---
 const apuntes = ref(JSON.parse(localStorage.getItem('apuntes_sofa_hist') || '[]'));
@@ -241,7 +220,15 @@ const unidades = [
 const valorUnidad = ref(1);
 const unidadOrigen = ref('cm');
 const unidadDestino = ref('m');
-const conversionValida = computed(() => unidadOrigen.value !== unidadDestino.value);
+
+const conversionValida = computed(() =>
+  unidades.includes(unidadOrigen.value) &&
+  unidades.includes(unidadDestino.value) &&
+  valorUnidad.value !== null &&
+  valorUnidad.value !== '' &&
+  !isNaN(valorUnidad.value)
+);
+
 const conversiones = {
   mm: { mm: 1, cm: 0.1, m: 0.001, pulgadas: 0.0393701, pies: 0.00328084, yardas: 0.00109361 },
   cm: { mm: 10, cm: 1, m: 0.01, pulgadas: 0.393701, pies: 0.0328084, yardas: 0.0109361 },
@@ -250,10 +237,18 @@ const conversiones = {
   pies: { mm: 304.8, cm: 30.48, m: 0.3048, pulgadas: 12, pies: 1, yardas: 0.333333 },
   yardas: { mm: 914.4, cm: 91.44, m: 0.9144, pulgadas: 36, pies: 3, yardas: 1 }
 };
+
 const valorConvertido = computed(() => {
-  if (conversiones[unidadOrigen.value] && conversiones[unidadOrigen.value][unidadDestino.value]) {
-    return (valorUnidad.value * conversiones[unidadOrigen.value][unidadDestino.value]).toFixed(4);
+  if (!conversionValida.value) return '';
+  const origen = unidadOrigen.value;
+  const destino = unidadDestino.value;
+  const valor = parseFloat(valorUnidad.value);
+  if (isNaN(valor)) return '';
+  if (conversiones[origen] && conversiones[origen][destino]) {
+    return (valor * conversiones[origen][destino]).toFixed(4);
   }
+  // Si origen y destino son iguales, devuelve el mismo valor
+  if (origen === destino) return valor.toFixed(4);
   return '';
 });
 
@@ -281,14 +276,15 @@ const retalesCalculados = computed(() => {
 });
 
 // --- Calculadora de tapizado ---
-const metrosTela = ref(null);
-const precioTela = ref(null);
-const manoObra = ref(null);
+const metrosTela = ref(0);
+const precioTela = ref(0);
+const manoObra = ref(0);
+
 const costeTapizado = computed(() => {
-  if (metrosTela.value > 0 && precioTela.value > 0 && manoObra.value >= 0) {
-    return (metrosTela.value * precioTela.value + manoObra.value).toFixed(2);
-  }
-  return null;
+  const tela = Number(metrosTela.value) * Number(precioTela.value);
+  const mano = Number(manoObra.value);
+  if (isNaN(tela) || isNaN(mano)) return 0;
+  return tela + mano;
 });
 
 // --- Conversor metros lineales a metros cuadrados ---
@@ -296,19 +292,10 @@ const metrosLineales = ref(null);
 const anchoTela = ref(null);
 const metrosCuadrados = computed(() => {
   if (metrosLineales.value > 0 && anchoTela.value > 0) {
-    return ((metrosLineales.value * anchoTela.value) / 100).toFixed(2);
+    return (metrosLineales.value * anchoTela.value) / 100;
   }
   return null;
 });
-
-const modalAbierto = ref(null);
-
-function abrirModal(nombre) {
-  modalAbierto.value = nombre;
-}
-function cerrarModal() {
-  modalAbierto.value = null;
-}
 
 const router = useRouter();
 function goBack() {

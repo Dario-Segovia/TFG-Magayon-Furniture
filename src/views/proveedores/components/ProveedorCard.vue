@@ -69,9 +69,7 @@
       <div class="productos-header">
         <strong>Productos</strong>
         <div style="display: flex; gap: 8px;">
-          <button class="btn-add-producto" @click="abrirModalProducto()">
-            <i class="fas fa-plus"></i> Añadir producto
-          </button>
+          
           <button class="btn-add-producto" @click="abrirModalInventario()">
             <i class="fas fa-box"></i> Añadir desde inventario
           </button>

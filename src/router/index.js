@@ -44,10 +44,7 @@ const routes = [
     path: '/estadisticas/proveedores',
     component: () => import('../views/estadisticas/components/proveedores.vue'),
   },
-  {
-    path: '/estadisticas/ventas',
-    component: () => import('../views/estadisticas/components/ventas.vue'),
-  },
+
    {
     path: '/estadisticas/compras',
     component: () => import('../views/estadisticas/components/compras.vue'),
