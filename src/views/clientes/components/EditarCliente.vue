@@ -1,5 +1,5 @@
 <template>
-  <form @submit.prevent="actualizar" class="clientes-form">
+  <form @submit.prevent="mostrarConfirmacion" class="clientes-form">
     <h2 class="clientes-form-title">Editar Cliente</h2>
 
     <div class="form-group">
@@ -80,6 +80,22 @@
         Actualizar Cliente
       </button>
     </div>
+
+    <!-- Modal de confirmación -->
+    <div v-if="showConfirm" class="modal-overlay">
+      <div class="modal-container fade-in" style="max-width: 350px;">
+        <div class="modal-header">
+          <h3>Confirmar actualización</h3>
+        </div>
+        <div class="modal-body">
+          <p>¿Estás seguro de que deseas actualizar este cliente?</p>
+        </div>
+        <div class="clientes-actions">
+          <button @click="confirmarActualizar" class="clientes-submit-btn">Sí</button>
+          <button @click="cancelarActualizar" class="clientes-cancel-btn">No</button>
+        </div>
+      </div>
+    </div>
   </form>
 </template>
 
@@ -99,6 +115,13 @@ const numero = ref(props.cliente.numero || '');
 const ciudad = ref(props.cliente.ciudad || '');
 const provincia = ref(props.cliente.provincia || '');
 const pais = ref(props.cliente.pais || '');
+const showConfirm = ref(false);
+let actualizarResolve = null;
+
+const actualizar = async () => {
+  showConfirm.value = true;
+  await new Promise((resolve) => (actualizarResolve = resolve));
+};
 
 // Observar cambios en props.cliente
 watch(
@@ -116,8 +139,13 @@ watch(
   { immediate: true } // Ejecutar inmediatamente al cargar el componente
 );
 
-// Función para actualizar el cliente
-const actualizar = async () => {
+// Función para mostrar el modal de confirmación
+const mostrarConfirmacion = () => {
+  showConfirm.value = true;
+};
+
+// Función para confirmar la actualización del cliente
+const confirmarActualizar = async () => {
   await invoke('actualizar_cliente', {
     id: props.cliente.id,
     nombre: nombre.value,
@@ -131,6 +159,14 @@ const actualizar = async () => {
   });
   emit('actualizado');
   emit('cerrar');
+  showConfirm.value = false;
+  if (actualizarResolve) actualizarResolve();
+};
+
+// Función para cancelar la actualización
+const cancelarActualizar = () => {
+  showConfirm.value = false;
+  if (actualizarResolve) actualizarResolve();
 };
 </script>
 
@@ -265,6 +301,49 @@ const actualizar = async () => {
   height: 1.25rem;
 }
 
+/* Estilos para el modal de confirmación */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(2px);
+}
+
+.modal-container {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.modal-header h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.modal-body {
+  font-size: 0.9375rem;
+  color: #6b7280;
+}
+
 @media (max-width: 640px) {
   .clientes-direccion-grid {
     grid-template-columns: 1fr;
@@ -278,5 +357,15 @@ const actualizar = async () => {
   .form-group {
     gap: 0.25rem;
   }
+}
+
+/* Animaciones para el modal */
+.modal-container.fade-in {
+  animation: modalFadeIn 0.25s;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.95);}
+  to { opacity: 1; transform: scale(1);}
 }
 </style>

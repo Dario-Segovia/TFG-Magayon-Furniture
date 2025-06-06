@@ -1,18 +1,25 @@
 <template>
   <button class="btn-back" @click="$router.back()">
-  <i class="fas fa-arrow-left"></i> Atrás
-</button>
-  <div class="empleados-container">
+    <i class="fas fa-arrow-left"></i> Atrás
+  </button>
+
+  <!-- Header separado y centrado -->
+  <div class="empleados-header-wrapper">
     <EmployeeHeader 
       @create="openCreateForm" 
       @show-calendar="openCalendar" 
     />
-    
+  </div>
+
+  <div class="empleados-container">
     <EmployeeSearch 
       v-model="searchQuery" 
       :count="filteredEmployees.length" 
+      :asc="asc"
+      @toggle-sort="toggleSort"
     />
-    
+
+    <!-- Carrusel de empleados -->
     <EmployeeList
       :employees="filteredEmployees"
       :loading="loading"
@@ -20,7 +27,7 @@
       @show-calendar="openEmployeeCalendar"
       @delete="prepareDelete"
     />
-    
+
     <EmployeeForm
       v-model:show="showForm"
       :is-editing="isEditing"
@@ -30,14 +37,14 @@
       @submit="submitForm"
       @close="closeForm"
     />
-    
+
     <CalendarModal
       v-model:show="showCalendar"
       :employee-id="selectedEmployeeId"
       :employee-name="getEmployeeName(selectedEmployeeId)"
       @close="closeCalendar"
     />
-    
+
     <ConfirmModal
       v-model:show="showDeleteModal"
       :employee-name="employeeToDeleteName"
@@ -67,6 +74,7 @@ const showCalendar = ref(false);
 const selectedEmployeeId = ref(null);
 const showDeleteModal = ref(false);
 const employeeToDelete = ref(null);
+const asc = ref(true); // true = A-Z, false = Z-A
 
 const employeeToDeleteName = computed(() => {
   return employeeToDelete.value 
@@ -121,15 +129,26 @@ const formData = ref({
 });
 
 const filteredEmployees = computed(() => {
-  if (!searchQuery.value) return employees.value;
+  let arr = [...employees.value];
 
-  const query = searchQuery.value.toLowerCase();
-  return employees.value.filter(emp =>
-    emp.nombre.toLowerCase().includes(query) ||
-    emp.apellido.toLowerCase().includes(query) ||
-    emp.puesto.toLowerCase().includes(query) ||
-    (emp.email && emp.email.toLowerCase().includes(query))
-  );
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    arr = arr.filter(emp =>
+      emp.nombre.toLowerCase().includes(query) ||
+      emp.apellido.toLowerCase().includes(query) ||
+      emp.puesto.toLowerCase().includes(query) ||
+      (emp.email && emp.email.toLowerCase().includes(query))
+    );
+  }
+
+  arr.sort((a, b) => {
+    const nameA = (a.nombre || '').toLowerCase();
+    const nameB = (b.nombre || '').toLowerCase();
+    if (asc.value) return nameA.localeCompare(nameB);
+    else return nameB.localeCompare(nameA);
+  });
+
+  return arr;
 });
 
 const loadEmployees = async () => {
@@ -204,16 +223,28 @@ const getEmployeeName = (id) => {
   return emp ? `${emp.nombre} ${emp.apellido}` : '';
 };
 
+function toggleSort() {
+  asc.value = !asc.value;
+}
+
 onMounted(loadEmployees);
 </script>
 
 <style scoped>
-.empleados-container {
-  background-color: var(--light-bg);
-  min-height: 100vh;
-  font-family: 'Nunito', sans-serif;
+.empleados-header-wrapper {
+  max-width: 1800px;
+  margin: 0 auto 22px auto;
 }
 
+.empleados-container {
+  padding: 20px;
+  max-width: 1800px;
+  margin: 0 auto;
+  background: #f4f7f9;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  font-family: 'Nunito', sans-serif;
+}
 
 .btn-back {
   display: inline-flex;

@@ -70,7 +70,7 @@
         <strong>Productos</strong>
         <div style="display: flex; gap: 8px;">
           
-          <button class="btn-add-producto" @click="abrirModalInventario()">
+          <button class="btn-add-producto" @click="$emit('abrir-inventario', proveedor)">
             <i class="fas fa-box"></i> Añadir desde inventario
           </button>
         </div>
@@ -143,6 +143,14 @@ const showInventarioModal = ref(false);
 watch(() => props.isOpen, async (open) => {
   if (open) await cargarProductos();
 });
+watch(
+  () => props.proveedor,
+  async (nuevoProveedor, anteriorProveedor) => {
+    if (props.isOpen && nuevoProveedor.id === anteriorProveedor?.id) {
+      await cargarProductos();
+    }
+  }
+);
 
 async function cargarProductos() {
   productos.value = await invoke('obtener_productos_proveedor', { proveedorId: props.proveedor.id });

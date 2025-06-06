@@ -54,7 +54,8 @@ const guardar = () => {
     nombre: nombre.value,
     descripcion: descripcion.value,
     cantidad: cantidad.value,
-    precio_unitario: precio_unitario.value,
+    // Convertir a string para el backend
+    precio_unitario: String(precio_unitario.value),
     categoria: categoria.value,
   });
 };

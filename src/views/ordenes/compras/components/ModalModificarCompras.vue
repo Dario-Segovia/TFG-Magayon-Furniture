@@ -6,7 +6,7 @@
         <button class="close-btn" @click="cerrarModal">×</button>
       </div>
       <div class="modal-body">
-        <form @submit.prevent="guardarCambios" class="modal-form">
+        <form @submit.prevent="intentarGuardar" class="modal-form">
           <div class="form-group full-width">
             <label for="proveedor">Proveedor:</label>
             <select
@@ -50,7 +50,13 @@
               <tbody>
                 <tr v-for="(detalle, index) in compraParaEditar.productos" :key="index" class="fade-in-row">
                   <td>{{ detalle.nombre }}</td>
-                  <td>{{ detalle.cantidad }}</td>
+                  <td>
+                    <div class="cantidad-control">
+                      <button type="button" class="btn-cantidad" @click="modificarCantidad(index, -1)" :disabled="detalle.cantidad <= 1">−</button>
+                      <input type="number" v-model.number="detalle.cantidad" min="1" class="form-input cantidad-input" style="width:60px;text-align:center;" />
+                      <button type="button" class="btn-cantidad" @click="modificarCantidad(index, 1)">+</button>
+                    </div>
+                  </td>
                   <td>{{ detalle.precio_unitario }} €</td>
                   <td>{{ (detalle.cantidad * detalle.precio_unitario).toFixed(2) }} €</td>
                   <td>
@@ -68,10 +74,28 @@
           </div>
 
           <div class="form-actions">
-            <button type="submit" class="btn btn-primary" :disabled="compraParaEditar.productos.length === 0">Guardar Cambios</button>
+            <button type="button" class="btn btn-primary" :disabled="compraParaEditar.productos.length === 0" @click="intentarGuardar">
+              Guardar Cambios
+            </button>
             <button type="button" class="btn btn-secondary" @click="cerrarModal">Cancelar</button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de confirmación -->
+  <div v-if="mostrarConfirmacion" class="modal-overlay" style="z-index:2000;">
+    <div class="modal-container" style="max-width:350px;">
+      <div class="modal-header">
+        <h2>Confirmar</h2>
+      </div>
+      <div class="modal-body">
+        <p>¿Estás seguro de que deseas guardar los cambios en esta compra?</p>
+        <div class="form-actions">
+          <button class="btn btn-primary" @click="confirmarGuardar">Sí, guardar</button>
+          <button class="btn btn-secondary" @click="cancelarGuardar">Cancelar</button>
+        </div>
       </div>
     </div>
   </div>
@@ -100,6 +124,7 @@ const productosProveedor = ref([]);
 const productoSeleccionado = ref("");
 const cantidad = ref(1);
 const precioUnitario = ref(0);
+const mostrarConfirmacion = ref(false);
 
 watch(() => props.compraSeleccionada, (nuevaCompra) => {
   if (nuevaCompra) {
@@ -171,6 +196,15 @@ const eliminarProducto = (index) => {
   compraParaEditar.value.productos.splice(index, 1);
 };
 
+const modificarCantidad = (index, delta) => {
+  const detalle = compraParaEditar.value.productos[index];
+  if (!detalle) return;
+  const nuevaCantidad = detalle.cantidad + delta;
+  if (nuevaCantidad >= 1) {
+    detalle.cantidad = nuevaCantidad;
+  }
+};
+
 const totalCompra = computed(() =>
   compraParaEditar.value.productos.reduce((acc, d) => acc + d.cantidad * d.precio_unitario, 0).toFixed(2)
 );
@@ -192,14 +226,14 @@ const guardarCambios = async () => {
     await invoke('actualizar_compra', {
       detalles: compraParaEditar.value.productos.map(detalle => ({
         id_compra: compraParaEditar.value.id,
-        fecha: fechaFormateada,
+        fecha: formatearFecha(compraParaEditar.value.fecha),
         id_proveedor: compraParaEditar.value.id_proveedor,
-        total: parseFloat(totalCompra.value), // ← AGREGA ESTE CAMPO
+        total: parseFloat(totalCompra.value),
         id_producto: Number(detalle.id_producto),
         nombre_producto: detalle.nombre,
         cantidad: Number(detalle.cantidad),
         precio_unitario: Number(detalle.precio_unitario),
-      })),
+      }))
     });
     emit('guardar', {
       ...compraParaEditar.value,
@@ -211,6 +245,19 @@ const guardarCambios = async () => {
   } catch (error) {
     console.error('Error guardando los cambios:', error);
   }
+};
+
+const intentarGuardar = () => {
+  mostrarConfirmacion.value = true;
+};
+
+const confirmarGuardar = async () => {
+  mostrarConfirmacion.value = false;
+  await guardarCambios();
+};
+
+const cancelarGuardar = () => {
+  mostrarConfirmacion.value = false;
 };
 
 const cerrarModal = () => {
@@ -385,5 +432,27 @@ const cerrarModal = () => {
 }
 .btn-secondary:hover {
   background-color: #e9ecef;
+}
+.cantidad-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-cantidad {
+  background-color: #e0e7ff;
+  color: #405890;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-cantidad:disabled {
+  background-color: #f0f0f0;
+  color: #b0b0b0;
+  cursor: not-allowed;
+}
+.btn-cantidad:hover:not(:disabled) {
+  background-color: #d1e7ff;
 }
 </style>

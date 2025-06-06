@@ -49,7 +49,13 @@
             <tbody>
               <tr v-for="(detalle, index) in venta.detalles" :key="index" class="fade-in-row">
                 <td>{{ detalle.nombre }}</td>
-                <td>{{ detalle.cantidad }}</td>
+                <td>
+                  <div class="cantidad-control">
+                    <button type="button" class="btn-cantidad" @click="modificarCantidad(index, -1)" :disabled="detalle.cantidad <= 1">−</button>
+                    <input type="number" v-model.number="detalle.cantidad" min="1" class="form-input cantidad-input" style="width:60px;text-align:center;" />
+                    <button type="button" class="btn-cantidad" @click="modificarCantidad(index, 1)">+</button>
+                  </div>
+                </td>
                 <td>{{ detalle.precio_unitario }} €</td>
                 <td>{{ (detalle.cantidad * detalle.precio_unitario).toFixed(2) }} €</td>
                 <td>
@@ -69,13 +75,29 @@
         </div>
 
         <div class="form-actions">
-          <button @click="guardarCambios" class="btn btn-primary" :disabled="venta.detalles.length === 0">
+          <button @click="intentarGuardar" class="btn btn-primary" :disabled="venta.detalles.length === 0">
             Actualizar Venta
           </button>
           <button @click="$emit('cancelar-edicion')" class="btn btn-secondary">
             Cancelar
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de confirmación -->
+<div v-if="mostrarConfirmacion" class="modal-overlay" style="z-index:2000;">
+  <div class="modal-container" style="max-width:350px;">
+    <div class="modal-header">
+      <h2>Confirmar</h2>
+    </div>
+    <div class="modal-body">
+      <p>¿Estás seguro de que deseas guardar los cambios en esta venta?</p>
+      <div class="form-actions">
+        <button class="btn btn-primary" @click="confirmarGuardar">Sí, guardar</button>
+        <button class="btn btn-secondary" @click="cancelarGuardar">Cancelar</button>
       </div>
     </div>
   </div>
@@ -133,6 +155,28 @@ const agregarProducto = async () => {
 
 const eliminarProducto = (index) => {
   venta.value.detalles.splice(index, 1);
+};
+
+const modificarCantidad = (index, delta) => {
+  const nuevoValor = venta.value.detalles[index].cantidad + delta;
+  if (nuevoValor > 0) {
+    venta.value.detalles[index].cantidad = nuevoValor;
+  }
+};
+
+const mostrarConfirmacion = ref(false);
+
+const intentarGuardar = () => {
+  mostrarConfirmacion.value = true;
+};
+
+const confirmarGuardar = () => {
+  mostrarConfirmacion.value = false;
+  guardarCambios();
+};
+
+const cancelarGuardar = () => {
+  mostrarConfirmacion.value = false;
 };
 
 const guardarCambios = () => {
@@ -436,5 +480,94 @@ const totalVenta = computed(() =>
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-10px);}
   to { opacity: 1; transform: translateY(0);}
+}
+.cantidad-control {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn-cantidad {
+  background: #e0e7ff;
+  border: none;
+  color: #405890;
+  font-size: 1.2em;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-cantidad:hover {
+  background: #c7d2fe;
+}
+.confirmacion-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1100;
+}
+
+.confirmacion-container {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 500px;
+  padding: 20px;
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+.confirmacion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.confirmacion-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.confirmacion-body {
+  font-size: 0.95rem;
+  color: #34495e;
+  margin-bottom: 20px;
+}
+
+.confirmacion-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-primary {
+  background-color: #3498db;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2980b9;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: #f8f9fa;
+  color: #34495e;
+}
+
+.btn-secondary:hover {
+  background-color: #e9ecef;
 }
 </style>

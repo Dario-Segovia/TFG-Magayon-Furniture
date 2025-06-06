@@ -80,6 +80,7 @@
           @toggle="toggleAcordeon"
           @edit="abrirEditarProveedor"
           @delete="confirmarEliminarProveedor"
+          @abrir-inventario="abrirInventarioParaProveedor"
         />
       </div>
     </div>
@@ -104,6 +105,12 @@
       @confirm="eliminarProveedor"
       @cancel="showConfirmacionModal = false"
     />
+    
+    <InventarioSelectorModal
+      v-if="showInventarioModal"
+      @close="cerrarInventarioModal"
+      @select-multiple="agregarProductosDesdeInventario"
+    />
   </div>
 </template>
 
@@ -114,6 +121,7 @@ import ProveedorCard from './components/ProveedorCard.vue';
 import NuevoProveedorModal from './components/NuevoProveedorModal.vue';
 import EditarProveedorModal from './components/EditarProveedorModal.vue';
 import ConfirmacionModal from './components/ConfirmacionModal.vue';
+import InventarioSelectorModal from './components/InventarioSelectorModal.vue';
 
 export default {
   components: {
@@ -121,6 +129,7 @@ export default {
     NuevoProveedorModal,
     EditarProveedorModal,
     ConfirmacionModal,
+    InventarioSelectorModal,
   },
 
   setup() {
@@ -138,6 +147,9 @@ export default {
     const showNuevoProveedorModal = ref(false);
     const showEditarProveedorModal = ref(false);
     const showConfirmacionModal = ref(false);
+    const showInventarioModal = ref(false);
+
+    const proveedorParaInventario = ref(null);
 
     // Obtener proveedores al cargar
     onMounted(async () => {
@@ -302,6 +314,55 @@ try {
       proveedorAbierto.value = proveedorAbierto.value === id ? null : id;
     };
 
+    function abrirInventarioParaProveedor(proveedor) {
+      if (!proveedor || !proveedor.id) return;
+      proveedorParaInventario.value = proveedor;
+      showInventarioModal.value = true;
+    }
+
+    function cerrarInventarioModal() {
+      showInventarioModal.value = false;
+      proveedorParaInventario.value = null;
+    }
+
+    let agregandoProductos = false;
+
+    async function agregarProductosDesdeInventario(productosSeleccionados) {
+      if (agregandoProductos) return;
+      agregandoProductos = true;
+
+      const proveedor = proveedorParaInventario.value;
+      if (!proveedor || !proveedor.id) {
+        showInventarioModal.value = false;
+        proveedorParaInventario.value = null;
+        agregandoProductos = false;
+        return;
+      }
+
+      try {
+        for (const producto of productosSeleccionados) {
+          await invoke('agregar_producto_proveedor', {
+            producto: {
+              producto: producto.nombre,
+              descripcion: producto.descripcion,
+              precio_unitario: producto.precio_unitario,
+              categoria: producto.categoria,
+              proveedorId: proveedor.id,
+            }
+          });
+        }
+        await cargarProveedores();
+        // Vuelve a abrir el card del proveedor para que recargue sus productos
+        proveedorAbierto.value = proveedor.id;
+      } catch (e) {
+        console.error(e);
+      } finally {
+        showInventarioModal.value = false;
+        proveedorParaInventario.value = null;
+        agregandoProductos = false;
+      }
+    }
+
     return {
       proveedores,
       proveedorSeleccionado,
@@ -314,6 +375,7 @@ try {
       showNuevoProveedorModal,
       showEditarProveedorModal,
       showConfirmacionModal,
+      showInventarioModal,
       proveedoresFiltrados,
       aplicarFiltros,
       toggleFiltrosAvanzados,
@@ -324,6 +386,9 @@ try {
       eliminarProveedor,
       proveedorAbierto,
       toggleAcordeon,
+      abrirInventarioParaProveedor,
+      cerrarInventarioModal,
+      agregarProductosDesdeInventario,
     };
   },
 };

@@ -72,7 +72,11 @@
             <label>Cliente</label>
             <select class="filtro-select" v-model="filtroCliente">
               <option value="">Todos</option>
-              <option v-for="cliente in clientes" :key="cliente.id" :value="cliente.id">
+              <option 
+                v-for="cliente in clientesOrdenados" 
+                :key="cliente.id" 
+                :value="cliente.id"
+              >
                 {{ cliente.nombre }}
               </option>
             </select>
@@ -192,6 +196,10 @@ const ventasFiltradas = computed(() => {
   });
 });
 
+const clientesOrdenados = computed(() => 
+  [...clientes.value].sort((a, b) => a.nombre.localeCompare(b.nombre))
+);
+
 const toggleFiltrosAvanzados = () => {
   mostrarFiltros.value = !mostrarFiltros.value;
 };
@@ -204,7 +212,7 @@ const abrirModalAgregar = () => {
 const crearVenta = async (ventaData) => {
   try {
     const id = await invoke('crear_venta', { data: ventaData });
-    alert(`Venta creada con ID: ${id}`);
+ 
     mostrarModalAgregar.value = false;
     await cargarVentas();
   } catch (e) {
@@ -234,7 +242,7 @@ const actualizarVenta = async (ventaData) => {
         data: ventaData
       }
     });
-    alert('Venta actualizada correctamente');
+    
     mostrarModalEditar.value = false;
     ventaEditando.value = null;
     ventaActual.value = null;
@@ -251,7 +259,7 @@ const eliminarVenta = (ventaId) => {
 const confirmarEliminarVenta = async () => {
   try {
     await invoke('delete_venta', { idVenta: ventaAEliminar.value });
-    alert('Venta eliminada correctamente');
+  
     ventaAEliminar.value = null;
     await cargarVentas();
   } catch (e) {

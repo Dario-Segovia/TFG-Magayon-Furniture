@@ -37,10 +37,22 @@
         </div>
       </div>
     </transition>
+
+    <!-- Modal de confirmación -->
+    <div v-if="showConfirm" class="confirm-modal-overlay">
+      <div class="confirm-modal">
+        <p>{{ confirmMessage }}</p>
+        <div class="confirm-actions">
+          <button @click="cancelAction" class="cancel-btn">No</button>
+          <button @click="confirmAction" class="submit-btn">Sí</button>
+          
+        </div>
+      </div>
+    </div>
   </template>
   
   <script setup>
-  import { watch } from 'vue';
+  import { watch, ref } from 'vue';
   
   const props = defineProps({
     show: Boolean,
@@ -62,13 +74,41 @@
     emit('update:formData', newVal);
   }, { deep: true });
   
+  const showConfirm = ref(false);
+  const confirmMessage = ref('');
+  let submitResolve = null;
+
   const handleSubmit = async () => {
+    if (props.isEditing) {
+      confirmMessage.value = '¿Estás seguro de que deseas actualizar este empleado?';
+      showConfirm.value = true;
+      // Esperar la respuesta del usuario solo si está editando
+      await new Promise((resolve) => (submitResolve = resolve));
+    } else {
+      // Guardar directamente si es creación
+      const newEmployee = {
+        ...props.formData,
+        id: props.formData.id || Date.now()
+      };
+      emit('submit', newEmployee);
+      close();
+    }
+  };
+
+  const confirmAction = () => {
     const newEmployee = {
       ...props.formData,
       id: props.formData.id || Date.now()
     };
-    emit('submit', newEmployee); // Enviar los datos completos al componente padre
+    emit('submit', newEmployee);
     close();
+    showConfirm.value = false;
+    if (submitResolve) submitResolve();
+  };
+
+  const cancelAction = () => {
+    showConfirm.value = false;
+    if (submitResolve) submitResolve();
   };
   </script>
   
@@ -212,6 +252,66 @@
     .cancel-btn, .submit-btn {
       flex: 1;
       text-align: center;
+    }
+  }
+
+  .confirm-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+  }
+  
+  .confirm-modal {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    max-width: 350px;
+    text-align: center;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+  }
+  
+  .confirm-modal p {
+    margin-bottom: 1.5rem;
+    color: var(--text-color);
+  }
+  
+  .confirm-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  
+  .confirm-actions .submit-btn,
+  .confirm-actions .cancel-btn {
+    flex: 1;
+    padding: 0.75rem;
+    border-radius: 0.35rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .confirm-actions .cancel-btn {
+    background-color: #dc2626;
+    border: none;
+    color: white;
+  }
+  
+  .confirm-actions .cancel-btn:hover {
+    background-color: #b91c1c;
+  }
+  
+  @media (max-width: 576px) {
+    .confirm-modal {
+      margin: 0 1rem;
     }
   }
   

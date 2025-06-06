@@ -44,19 +44,26 @@ defineProps({
 <style scoped>
 .main-content {
   max-width: 1400px;
-  margin: 2rem auto;
-  padding: 0 2rem;
+  margin: 2rem auto 0 auto;
+  padding: 0 0.5rem;
+  width: 100%;
+  /* Asegura que crece en altura según el contenido */
+  min-height: 200px;
+  box-sizing: border-box;
 }
 
 .employees-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1.5rem;
   width: 100%;
-  /* Añade estas propiedades para prevenir posibles overrides: */
-  grid-auto-flow: row dense;
-  grid-auto-rows: min-content;
+  margin: 0;
+  padding: 0;
+  /* Permite que el grid crezca verticalmente según el contenido */
+  overflow: visible;
+  box-sizing: border-box;
 }
+
 /* Estados de carga y vacío */
 .loading-state, .empty-state {
   display: flex;
@@ -67,6 +74,7 @@ defineProps({
   background-color: var(--card-bg);
   border-radius: 0.35rem;
   box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+  width: 100%;
 }
 
 .loading-state i {
@@ -193,15 +201,7 @@ defineProps({
 
 @media (max-width: 768px) {
   .main-content {
-    padding: 0 1rem;
+    padding: 0 0.2rem;
   }
 }
-
-@media (max-width: 576px) {
-  .employees-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Mismo comportamiento que en desktop pero con tarjetas más pequeñas */
-  }
-}
-
-
 </style>

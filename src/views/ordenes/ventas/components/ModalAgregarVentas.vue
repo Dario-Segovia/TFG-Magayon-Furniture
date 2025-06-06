@@ -22,7 +22,7 @@
           <div class="agregar-producto-row">
             <select v-model="productoSeleccionado" class="form-select">
               <option disabled value="">Producto</option>
-              <option v-for="producto in inventario" :key="producto.id" :value="producto.id">
+              <option v-for="producto in productosFiltrados" :key="producto.id" :value="producto.id">
                 {{ producto.nombre }} ({{ producto.categoria }})
               </option>
             </select>
@@ -48,7 +48,13 @@
               <tbody>
                 <tr v-for="(detalle, index) in venta.detalles" :key="index" class="fade-in-row">
                   <td>{{ detalle.nombre }}</td>
-                  <td>{{ detalle.cantidad }}</td>
+                  <td>
+                    <div class="cantidad-control">
+                      <button type="button" class="btn-cantidad" @click="modificarCantidad(index, -1)" :disabled="detalle.cantidad <= 1">−</button>
+                      <input type="number" v-model.number="detalle.cantidad" min="1" class="form-input cantidad-input" style="width:60px;text-align:center;" />
+                      <button type="button" class="btn-cantidad" @click="modificarCantidad(index, 1)">+</button>
+                    </div>
+                  </td>
                   <td>{{ detalle.precio_unitario }} €</td>
                   <td>{{ (detalle.cantidad * detalle.precio_unitario).toFixed(2) }} €</td>
                   <td>
@@ -99,6 +105,15 @@ const venta = ref({
   id_cliente: '',
   detalles: []
 });
+const filtroProducto = ref("");
+
+const productosFiltrados = computed(() => {
+  return [...props.inventario]
+    .filter(p =>
+      p.nombre.toLowerCase().includes(filtroProducto.value.toLowerCase())
+    )
+    .sort((a, b) => a.nombre.localeCompare(b.nombre));
+});
 
 const agregarProducto = async () => {
   if (!productoSeleccionado.value || cantidad.value <= 0) return;
@@ -119,6 +134,15 @@ const agregarProducto = async () => {
   productoSeleccionado.value = "";
   cantidad.value = 1;
 };
+
+function modificarCantidad(index, delta) {
+  const detalle = venta.value.detalles[index];
+  if (!detalle) return;
+  const nuevaCantidad = detalle.cantidad + delta;
+  if (nuevaCantidad >= 1) {
+    detalle.cantidad = nuevaCantidad;
+  }
+}
 
 const eliminarProducto = (index) => {
   venta.value.detalles.splice(index, 1);
@@ -426,5 +450,27 @@ const totalVenta = computed(() =>
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-10px);}
   to { opacity: 1; transform: translateY(0);}
+}
+.cantidad-control {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn-cantidad {
+  background: #e0e7ff;
+  border: none;
+  color: #405890;
+  font-size: 1.2em;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-cantidad:hover {
+  background: #c7d2fe;
 }
 </style>

@@ -131,6 +131,29 @@
   </div>
 </transition>
 
+<!-- Modal de confirmación para guardar/actualizar -->
+<transition name="modal-fade">
+  <div v-if="mostrarConfirmarGuardar" class="modal-overlay">
+    <div class="modal-container">
+      <button @click="cancelarConfirmarGuardar" class="modal-close-btn">
+        <i class="fas fa-times"></i>
+      </button>
+      <div class="modal-header">
+        <h3 class="modal-title">¿Confirmar {{ horarioEditando ? 'actualización' : 'registro' }}?</h3>
+      </div>
+      <div class="modal-body">
+        <p>
+          ¿Estás seguro de que deseas {{ horarioEditando ? 'actualizar' : 'guardar' }} este horario?
+        </p>
+      </div>
+      <div class="modal-actions">
+        <button @click="confirmarGuardar" class="action-btn submit-btn">Sí</button>
+        <button @click="cancelarConfirmarGuardar" class="action-btn cancel-btn">No</button>
+      </div>
+    </div>
+  </div>
+</transition>
+
   </div>
 </template>
 
@@ -157,6 +180,7 @@ const empleadoNombre = ref('')
 const eventos = ref([])
 const mostrarFormulario = ref(false)
 const mostrarConfirmacion = ref(false)
+const mostrarConfirmarGuardar = ref(false)
 const horarioEditando = ref(false)
 const turnoAEliminar = ref(null)
 
@@ -347,7 +371,14 @@ function applyEventClassNames(info) {
   return info.event.extendedProps.tipo_turno?.toLowerCase().replace(' ', '-') || ''
 }
 
+let guardarResolve = null;
+
 async function guardarHorario() {
+  mostrarConfirmarGuardar.value = true;
+  await new Promise((resolve) => (guardarResolve = resolve));
+}
+
+async function confirmarGuardar() {
   try {
     const horarioData = {
       empleado_id: props.empleadoId,
@@ -359,7 +390,7 @@ async function guardarHorario() {
     };
 
     if (horarioEditando.value) {
-      const id = parseInt(nuevoHorario.value.id, 10); // Convierte el ID a entero
+      const id = parseInt(nuevoHorario.value.id, 10);
       await invoke('update_horario', { 
         id,
         horario: horarioData
@@ -370,13 +401,19 @@ async function guardarHorario() {
 
     mostrarFormulario.value = false;
     await cargarDatos();
-
-    // Emitir evento con los datos actualizados
     emit('changes-made', horarioData);
   } catch (error) {
     console.error('Error al guardar horario:', error);
   }
+  mostrarConfirmarGuardar.value = false;
+  if (guardarResolve) guardarResolve();
 }
+
+function cancelarConfirmarGuardar() {
+  mostrarConfirmarGuardar.value = false;
+  if (guardarResolve) guardarResolve();
+}
+
 function descartarCambios() {
   cambiosPendientes.value.forEach(cambio => {
     cambio.event.setDates(cambio.originalStart, cambio.originalEnd)
@@ -730,9 +767,7 @@ textarea.modern-input {
   background-color: #3a5bd9;
 }
 
-:deep(.fc-button-primary:not(:disabled).fc-button-active) {
-  
-}
+
 
 :deep(.fc-event) {
   border: none;

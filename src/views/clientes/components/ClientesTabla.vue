@@ -6,13 +6,32 @@
         class="clientes-search" 
         placeholder="Buscar cliente..."
       />
-      <button class="clientes-btn-primary" @click="abrirModalCrear">
-        <svg class="clientes-icon" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-        </svg>
-        Nuevo cliente
-      </button>
+      <div style="display: flex; gap: 1rem; align-items: center;">
+        <button class="clientes-btn-primary" @click="abrirModalCrear">
+          <svg class="clientes-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+          </svg>
+          Nuevo cliente
+        </button>
+        <div class="filtros-dropdown">
+          <button class="clientes-btn-secondary" @click="mostrarFiltros = !mostrarFiltros">
+            <i class="fas fa-filter"></i> Filtros
+          </button>
+          <div v-if="mostrarFiltros" class="filtros-dropdown-content">
+            <select v-model="ciudadSeleccionada" class="clientes-search">
+              <option value="">Todas las ciudades</option>
+              <option v-for="ciudad in ciudadesUnicas" :key="ciudad" :value="ciudad">{{ ciudad }}</option>
+            </select>
+            <select v-model="paisSeleccionado" class="clientes-search">
+              <option value="">Todos los países</option>
+              <option v-for="pais in paisesUnicos" :key="pais" :value="pais">{{ pais }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
     </div>
+
+    
 
     <div class="clientes-table-container">
       <table class="clientes-table">
@@ -150,6 +169,9 @@
   const mostrarCrear = ref(false)
   const clienteEditando = ref(null)
   const clienteAEliminar = ref(null)
+  const ciudadSeleccionada = ref('')
+  const paisSeleccionado = ref('')
+  const mostrarFiltros = ref(false)
   
   const fetchClientes = async () => {
     clientes.value = await invoke('obtener_clientes')
@@ -222,14 +244,31 @@
     window.open(mailtoLink, '_blank');
   };
   
+  // Ciudades únicas
+  const ciudadesUnicas = computed(() => {
+    const set = new Set(clientes.value.map(c => c.ciudad).filter(Boolean));
+    return Array.from(set);
+  });
+
+  // Países únicos
+  const paisesUnicos = computed(() => {
+    const set = new Set(clientes.value.map(c => c.pais).filter(Boolean));
+    return Array.from(set);
+  });
+  
+  // Filtro combinado
   const clientesFiltrados = computed(() =>
     clientes.value.filter(c =>
-      c.nombre.toLowerCase().includes(filtro.value.toLowerCase()) ||
-      c.email.toLowerCase().includes(filtro.value.toLowerCase()) ||
-      c.telefono?.toLowerCase().includes(filtro.value.toLowerCase())
+      (
+        c.nombre.toLowerCase().includes(filtro.value.toLowerCase()) ||
+        c.email.toLowerCase().includes(filtro.value.toLowerCase()) ||
+        c.telefono?.toLowerCase().includes(filtro.value.toLowerCase())
+      ) &&
+      (!ciudadSeleccionada.value || c.ciudad === ciudadSeleccionada.value) &&
+      (!paisSeleccionado.value || c.pais === paisSeleccionado.value)
     )
   )
-  
+
   onMounted(fetchClientes)
   </script>
   
@@ -412,7 +451,35 @@
     color: #1d4ed8; /* Azul más oscuro */
   }
   
- /* Estilos mejorados para los modales */
+  .clientes-filtros {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+  
+.filtros-dropdown {
+  position: relative;
+}
+.filtros-dropdown-content {
+  position: absolute;
+  right: 0;
+  top: 110%;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  padding: 1rem;
+  z-index: 10;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.filtros-dropdown-content select {
+  width: 100%;
+}
+
+/* Estilos mejorados para los modales */
 .modal-overlay {
   position: fixed;
   top: 0;

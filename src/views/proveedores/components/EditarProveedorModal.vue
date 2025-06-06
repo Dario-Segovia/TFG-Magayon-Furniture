@@ -9,7 +9,7 @@
       </div>
       
       <div class="modal-body">
-        <form @submit.prevent="guardarCambios" class="modal-form">
+        <form @submit.prevent="intentarGuardar" class="modal-form">
           <div class="form-grid">
             <div class="form-group">
               <label>Nombre*</label>
@@ -62,11 +62,27 @@
             <button type="button" @click="$emit('close')" class="btn btn-secondary">
               Cancelar
             </button>
-            <button type="submit" class="btn btn-primary">
+            <button type="button" class="btn btn-primary" @click="intentarGuardar">
               <i class="fas fa-save"></i> Guardar Cambios
             </button>
           </div>
         </form>
+
+        <!-- Modal de confirmación -->
+        <div v-if="mostrarConfirmacion" class="modal-overlay" style="z-index:2000;">
+          <div class="modal-container" style="max-width:350px;">
+            <div class="modal-header">
+              <h2>Confirmar</h2>
+            </div>
+            <div class="modal-body">
+              <p>¿Estás seguro de que deseas guardar los cambios de este proveedor?</p>
+              <div class="form-actions">
+                <button class="btn btn-primary" @click="confirmarGuardar">Sí, guardar</button>
+                <button class="btn btn-secondary" @click="cancelarGuardar">Cancelar</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -85,6 +101,7 @@ export default {
   emits: ['close', 'save'],
   setup(props, { emit }) {
     const proveedorEditado = ref({ ...props.proveedor });
+    const mostrarConfirmacion = ref(false);
 
     watch(() => props.proveedor, (newVal) => {
       proveedorEditado.value = { ...newVal };
@@ -94,9 +111,26 @@ export default {
       emit('save', proveedorEditado.value);
     };
 
+    function intentarGuardar() {
+      mostrarConfirmacion.value = true;
+    }
+
+    function confirmarGuardar() {
+      mostrarConfirmacion.value = false;
+      guardarCambios();
+    }
+
+    function cancelarGuardar() {
+      mostrarConfirmacion.value = false;
+    }
+
     return {
       proveedorEditado,
       guardarCambios,
+      mostrarConfirmacion,
+      intentarGuardar,
+      confirmarGuardar,
+      cancelarGuardar,
     };
   },
 };
@@ -313,6 +347,42 @@ export default {
 
 .btn-secondary:hover {
   background-color: #e9ecef;
+}
+
+.confirmacion-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1100;
+  backdrop-filter: blur(5px);
+}
+
+.confirmacion-contenido {
+  background-color: white;
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.confirmacion-contenido p {
+  margin: 0 0 20px;
+  font-size: 1rem;
+  color: #34495e;
+}
+
+.botones-confirmacion {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
 }
 
 @media (max-width: 600px) {

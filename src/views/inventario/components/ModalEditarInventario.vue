@@ -35,6 +35,22 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal de confirmación -->
+  <div v-if="showConfirm" class="modal-overlay">
+    <div class="modal-container fade-in" style="max-width: 350px;">
+      <div class="modal-header">
+        <h3>Confirmar</h3>
+      </div>
+      <div class="modal-body">
+        <p>¿Estás seguro de que deseas guardar los cambios?</p>
+      </div>
+      <div class="form-actions">
+        <button @click="confirmarGuardar" class="btn btn-primary">Sí</button>
+        <button @click="cancelarGuardar" class="btn btn-secondary">No</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -48,6 +64,9 @@ const cantidad = ref(props.item.cantidad);
 const precio_unitario = ref(props.item.precio_unitario);
 const categoria = ref(props.item.categoria);
 
+const showConfirm = ref(false);
+let guardarResolve = null;
+
 watch(() => props.item, (val) => {
   nombre.value = val.nombre;
   descripcion.value = val.descripcion;
@@ -56,15 +75,27 @@ watch(() => props.item, (val) => {
   categoria.value = val.categoria;
 });
 
-const guardar = () => {
+const guardar = async () => {
+  showConfirm.value = true;
+  await new Promise((resolve) => (guardarResolve = resolve));
+};
+
+const confirmarGuardar = () => {
   emit('save', {
-    id: props.item.id,  // Asegúrate de incluir el ID
+    id: props.item.id,
     nombre: nombre.value,
     descripcion: descripcion.value,
     cantidad: cantidad.value,
-    precio_unitario: precio_unitario.value,
+    precio_unitario: String(precio_unitario.value), // Importante: como string
     categoria: categoria.value,
   });
+  showConfirm.value = false;
+  if (guardarResolve) guardarResolve();
+};
+
+const cancelarGuardar = () => {
+  showConfirm.value = false;
+  if (guardarResolve) guardarResolve();
 };
 </script>
 
@@ -281,18 +312,80 @@ const guardar = () => {
   background-color: #e9ecef;
 }
 
-@media (max-width: 600px) {
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .form-actions {
-    flex-direction: column-reverse;
-  }
-  
-  .btn {
-    width: 100%;
-    justify-content: center;
-  }
+/* Modal de confirmación */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(2px);
+}
+
+.modal-container.fade-in {
+  animation: modalFadeIn 0.25s;
+}
+
+.modal-container[style*="max-width: 350px"] {
+  max-width: 350px !important;
+  width: 95%;
+  padding: 0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #2c3e50;
+  font-weight: 600;
+  padding: 18px 24px 0 24px;
+}
+
+.modal-body {
+  padding: 18px 24px 0 24px;
+  font-size: 1.05rem;
+  color: #34495e;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 18px 24px 18px 24px;
+  border-top: 1px solid #f0f0f0;
+  margin-top: 0;
+}
+
+.btn-primary {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 10px 18px;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: #217dbb;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: #f8f9fa;
+  color: #34495e;
+  border: none;
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 10px 18px;
+  transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+  background-color: #e9ecef;
 }
 </style>

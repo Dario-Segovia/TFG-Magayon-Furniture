@@ -29,6 +29,7 @@
 
       <p v-if="error" class="error">{{ error }}</p>
       <p v-if="rol" class="success">{{ $t('login.access') }}: {{ rol }}</p>
+ 
     </div>
   </div>
 </template>
@@ -71,7 +72,11 @@ async function login() {
     rol.value = result;
 
     // Almacena el usuario y rol en localStorage
-    const user = { usuario: usuario.value, rol: result };
+    const user = { 
+      usuario: usuario.value, 
+      rol: result.rol || result, 
+      nombre: result.nombre || usuario.value // Usa el nombre real si está disponible
+    };
     localStorage.setItem('user', JSON.stringify(user));
 
     // Redirige al home después de un login exitoso

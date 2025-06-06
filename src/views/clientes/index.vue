@@ -1,10 +1,15 @@
 <template>
- <button class="btn-back" @click="$router.back()">
-  <i class="fas fa-arrow-left"></i> Atrás
-</button>
+  <button class="btn-back" @click="$router.back()">
+    <i class="fas fa-arrow-left"></i> Atrás
+  </button>
   <div class="clientes-page">
-    <div class="clientes-header">
-      <h1 class="clientes-title">Gestión de Clientes</h1>
+    <div class="clientes-header fade-in">
+      <div class="header-content">
+        <h1><i class="fas fa-users"></i> Gestión de Clientes</h1>
+        <p class="subtitle">Administra tus clientes y su información</p>
+      </div>
+      <!-- Aquí puedes agregar un botón para nuevo cliente si lo necesitas -->
+      <!-- <button class="btn-primary"><i class="fas fa-plus"></i> Nuevo Cliente</button> -->
     </div>
     <div class="clientes-content">
       <ClientesTabla />
@@ -28,31 +33,44 @@ onMounted(fetchClientes)
 
 <style scoped>
 .clientes-page {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  padding: 2rem;
-  background-color: #f9fafb; /* Fondo claro */
-  min-height: 100vh; /* Asegura que ocupe toda la pantalla */
+  padding: 20px;
+  max-width: 1800px;
+  margin: 0 auto;
+  background: #f4f7f9;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
-
 .clientes-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
-  background-color: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 22px;
+  padding: 22px;
+  background: linear-gradient(135deg, #5A8DEE, #A084EE); /* Gradiente azul-morado */
+  border-radius: 10px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+  animation: fadeIn 0.5s;
 }
-
-.clientes-title {
-  font-size: 1.875rem; /* Tamaño de texto grande */
-  font-weight: 700;
-  color: #111827; /* Texto oscuro */
+.header-content h1 {
   margin: 0;
+  font-size: 1.7rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
-
+.subtitle {
+  margin: 0;
+  font-size: 1rem;
+  color: #e0e7ff;
+}
+.fade-in {
+  animation: fadeIn 0.5s;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 .clientes-content {
   padding: 1.5rem;
   background-color: white;
@@ -60,6 +78,26 @@ onMounted(fetchClientes)
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+.btn-primary {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  background: linear-gradient(135deg, #5A8DEE, #A084EE);
+  color: white;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.10);
+  transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, #A084EE, #5A8DEE);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(0,0,0,0.15);
+}
 
 .btn-back {
   display: inline-flex;

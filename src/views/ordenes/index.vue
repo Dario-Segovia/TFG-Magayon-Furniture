@@ -70,13 +70,13 @@ const vistaActual = ref('compras')
 .main-content {
   display: flex;
   flex: 1;
-  overflow: hidden;
+  overflow: visible; /* <-- Cambia esto */
 }
 
 .content-area {
   flex: 1;
   padding: 16px;
-  overflow: auto;
+  overflow: visible; /* Permite que los dropdowns salgan hacia abajo */
 }
 
 .module-container {

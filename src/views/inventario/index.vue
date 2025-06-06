@@ -8,25 +8,56 @@
         <h1><i class="fas fa-boxes"></i> Inventario</h1>
         <p class="subtitle">Gestiona los productos y existencias de tu inventario</p>
       </div>
-      <button @click="showAgregar = true" class="btn-primary">
-        <i class="fas fa-plus"></i> Nuevo Ítem
-      </button>
-      <input
-        ref="inputArchivo"
-        type="file"
-        accept=".xml"
-        style="display: none"
-        @change="onArchivoSeleccionado"
-      />
-      <button @click="abrirSelectorArchivo" class="btn-primary" style="margin-left: 10px;">
-        <i class="fas fa-file-import"></i> Importar XML
-      </button>
+      <div class="header-actions">
+        <button @click="showAgregar = true" class="btn-primary">
+          <i class="fas fa-plus"></i> Nuevo Ítem
+        </button>
+        <input
+          ref="inputArchivo"
+          type="file"
+          accept=".xml"
+          style="display: none"
+          @change="onArchivoSeleccionado"
+        />
+        <button @click="showImportarXml = true" class="btn-icon btn-xml" title="Importar XML">
+          <i class="fas fa-file-code"></i>
+        </button>
+      </div>
     </div>
 
     <div class="filtros-container fade-in">
       <div class="search-box">
         <input v-model="searchTerm" placeholder="Buscar en inventario..." />
         <i class="fas fa-search"></i>
+      </div>
+      <div class="filtros-avanzados">
+        <button @click="mostrarFiltros = !mostrarFiltros">
+          <i class="fas fa-filter"></i> Filtros Avanzados
+        </button>
+        <div v-if="mostrarFiltros" class="filtros-content">
+          <div class="filtro-group">
+            <label for="categoria">Categoría:</label>
+            <select id="categoria" v-model="categoriaSeleccionada">
+              <option value="">Todas</option>
+              <option v-for="cat in categorias" :key="cat" :value="cat">{{ cat }}</option>
+            </select>
+          </div>
+          <div class="filtro-group">
+            <label>Rango de Precio</label>
+            <Slider
+              v-model="rangoPrecio"
+              :min="0"
+              :max="1000"
+              :step="10"
+              :tooltip="'always'"
+              :lazy="true"
+              :strict="true"
+              :format="{ to: v => v, from: v => v }"
+            />
+           
+          </div>
+          
+        </div>
       </div>
     </div>
 
@@ -75,6 +106,11 @@
       @close="abrirImportar = false"
       @importar="importarArchivo"
     />
+    <ModalImportarXml
+      v-if="showImportarXml"
+      @close="showImportarXml = false"
+      @importar-xml="procesarArchivoXml"
+    />
   </div>
 </template>
 
@@ -83,12 +119,14 @@ import { ref, computed, onMounted } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 import { writeFile, readFile, BaseDirectory } from '@tauri-apps/plugin-fs';
 
+import '@vueform/slider/themes/default.css'
+import Slider from '@vueform/slider'
 
 import InventarioCard from './components/InventarioCard.vue';
 import ModalAgregarInventario from './components/ModalAgregarInventario.vue';
 import ModalEditarInventario from './components/ModalEditarInventario.vue';
 import ModalEliminarInventario from './components/ModalEliminarInventario.vue';
-
+import ModalImportarXml from './components/ModalImportarXml.vue';
 
 const items = ref([]);
 const loading = ref(false);
@@ -98,9 +136,13 @@ const showAgregar = ref(false);
 const itemEditar = ref(null);
 const itemEliminar = ref(null);
 const abrirImportar = ref(false);
+const mostrarFiltros = ref(false);
+const showImportarXml = ref(false);
 
 const searchTerm = ref('');
 const inputArchivo = ref(null);
+const categoriaSeleccionada = ref('');
+const rangoPrecio = ref([0, 1000]);
 
 const cargarInventario = async () => {
   loading.value = true;
@@ -119,10 +161,24 @@ const cargarInventario = async () => {
 onMounted(cargarInventario);
 
 const itemsFiltrados = computed(() => {
-  return items.value.filter(item =>
-    item.nombre.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-    (item.descripcion && item.descripcion.toLowerCase().includes(searchTerm.value.toLowerCase()))
-  );
+  return items.value.filter(item => {
+    const coincideBusqueda =
+      item.nombre.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
+      (item.descripcion && item.descripcion.toLowerCase().includes(searchTerm.value.toLowerCase()));
+    const coincideCategoria =
+      !categoriaSeleccionada.value || item.categoria === categoriaSeleccionada.value;
+    const coincidePrecio =
+      item.precio_unitario >= rangoPrecio.value[0] && item.precio_unitario <= rangoPrecio.value[1];
+    return coincideBusqueda && coincideCategoria && coincidePrecio;
+  });
+});
+
+const categorias = computed(() => {
+  const set = new Set();
+  items.value.forEach(item => {
+    if (item.categoria) set.add(item.categoria);
+  });
+  return Array.from(set);
 });
 
 const agregarItem = async (nuevo) => {
@@ -212,6 +268,27 @@ const onArchivoSeleccionado = (e) => {
     importarArchivo(archivo);
   }
 };
+
+const aplicarFiltros = () => {
+  mostrarFiltros.value = false;
+};
+
+const procesarArchivoXml = async (xmlData) => {
+  try {
+    loading.value = true;
+    error.value = null;
+
+    await invoke('importar_inventario_xml', { xmlData });
+
+    showImportarXml.value = false;
+    await cargarInventario();
+  } catch (e) {
+    console.error('Error al procesar archivo XML:', e);
+    error.value = 'Error al procesar archivo XML';
+  } finally {
+    loading.value = false;
+  }
+};
 </script>
 
 
@@ -230,18 +307,16 @@ const onArchivoSeleccionado = (e) => {
   align-items: center;
   margin-bottom: 22px;
   padding: 22px;
-  background: linear-gradient(135deg, #DB5375, #B3FFB3); /* Cambiado aquí */
+  background: linear-gradient(135deg, #DB5375, #B3FFB3);
   border-radius: 10px;
   color: white;
   box-shadow: 0 4px 12px rgba(0,0,0,0.10);
   animation: fadeIn 0.5s;
 }
-.header-content h1 {
-  margin: 0;
-  font-size: 1.7rem;
+.header-content {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 4px;
 }
 .subtitle {
   margin: 0;
@@ -293,6 +368,9 @@ const onArchivoSeleccionado = (e) => {
   color: #777;
   font-size: 1.2rem;
 }
+.filtros-avanzados {
+  position: relative;
+}
 .filtros-avanzados button {
   padding: 8px 15px;
   border: none;
@@ -325,25 +403,20 @@ const onArchivoSeleccionado = (e) => {
   width: 220px;
   margin-top: 5px;
 }
+.filtro-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+}
 .filtro-group label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: 500;
-  color: #333;
+  margin-bottom: 4px;
+  font-size: 0.95rem;
 }
 .filtro-group select {
-  width: 100%;
   padding: 8px;
   border-radius: 8px;
   border: 1px solid #ddd;
   font-size: 1rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  transition: border-color 0.3s, box-shadow 0.3s;
-}
-.filtro-group select:focus {
-  border-color: #4caf50;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.10);
-  outline: none;
 }
 .inventario-grid {
   margin-top: 10px;
@@ -392,24 +465,35 @@ const onArchivoSeleccionado = (e) => {
   box-shadow: 0 6px 10px rgba(0,0,0,0.15);
 }
 
-
-.btn-back {
-  display: inline-flex;
+.header-actions {
+  display: flex;
   align-items: center;
-  gap: 6px;
-  background: #ffffff;
-  border: none;
-  color: #2b4583;
-  font-size: 1.08rem;
-  font-weight: 500;
-  padding: 8px 16px;
-  border-radius: 8px;
-  margin-bottom: 18px;
-  cursor: pointer;
-  transition: background 0.18s, color 0.18s;
+  gap: 12px;
 }
-.btn-back:hover {
-  background: #e9ecef;
-  color: #1a2b4c;
+
+.btn-icon {
+  background: linear-gradient(135deg, #EA6E6E ,  #9375FE);
+  border: none;
+  border-radius: 8px;
+  width: 48px;         /* cuadrado */
+  height: 48px;        /* cuadrado */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  font-size: 1.6rem;   /* icono más grande */
+  box-shadow: 0 4px 6px rgba(0,0,0,0.10);
+  transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
+  padding: 0;          /* sin padding extra */
+}
+.btn-icon:hover {
+  background: linear-gradient(135deg, #9375FE, #EA6E6E);
+  transform: translateY(-2px) scale(1.08);
+  box-shadow: 0 6px 10px rgba(0,0,0,0.15);
+}
+.btn-xml i {
+  font-size: 1.4em;
+  margin: 0;
 }
 </style>

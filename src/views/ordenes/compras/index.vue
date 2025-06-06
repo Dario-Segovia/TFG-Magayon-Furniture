@@ -52,7 +52,11 @@
             <label>Proveedor</label>
             <select class="filtro-select" v-model="filtroProveedor">
               <option value="">Todos</option>
-              <option v-for="proveedor in proveedores" :key="proveedor.id" :value="proveedor.id">
+              <option 
+                v-for="proveedor in proveedoresOrdenados" 
+                :key="proveedor.id" 
+                :value="proveedor.id"
+              >
                 {{ proveedor.nombre }}
               </option>
             </select>
@@ -151,8 +155,18 @@ async function handleCompraActualizada(compraActualizada) {
     await invoke('actualizar_compra', {
       id: compraActualizada.id,
       idProveedor: compraActualizada.id_proveedor,
-      total: compraActualizada.total,
-      fecha: fechaFormateada
+      total: Number(compraActualizada.total),
+      fecha: fechaFormateada,
+      detalles: compraActualizada.productos.map(detalle => ({
+        id_compra: compraActualizada.id,
+        id_proveedor: compraActualizada.id_proveedor,
+        id_producto: Number(detalle.id_producto || detalle.id),
+        cantidad: Number(detalle.cantidad),
+        precio_unitario: Number(detalle.precio_unitario),
+        nombre_producto: detalle.nombre || detalle.nombre_producto,
+        fecha: fechaFormateada,
+        total: Number(compraActualizada.total) // <-- agrega este campo aquí
+      }))
     });
     const index = compras.value.findIndex(c => c.id === compraActualizada.id);
     if (index !== -1) {
@@ -213,6 +227,13 @@ const comprasFiltradas = computed(() => {
     return true;
   });
 });
+
+
+
+
+const proveedoresOrdenados = computed(() => 
+  [...proveedores.value].sort((a, b) => a.nombre.localeCompare(b.nombre))
+);
 </script>
 
 <style scoped>
@@ -342,18 +363,22 @@ const comprasFiltradas = computed(() => {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
-
 .filtros-content {
   position: absolute;
   right: 0;
   top: 100%;
+  bottom: auto;
+  left: auto;
   background: white;
   padding: 15px;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0,0,0,0.10);
-  z-index: 10;
+  z-index: 9999;
   width: 220px;
   margin-top: 5px;
+  max-height: 230px;
+  overflow-y: auto;
+  transform: translateY(0) !important;
 }
 
 .filtro-group {
