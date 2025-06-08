@@ -5,3 +5,9 @@ This template should help get you started developing with Tauri + Vue 3 in Vite.
 ## Recommended IDE Setup
 
 - [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+
+
+
+Demostración de uso del proyecto
+
+[![Video en YouTube](https://img.youtube.com/vi/ElAqM0N56E4/0.jpg)](https://youtu.be/ElAqM0N56E4)
