@@ -1,0 +1,153 @@
+{
+  "login": {
+    "title": "登录",
+    "username": "用户名",
+    "password": "密码",
+    "submit": "进入",
+    "access": "以身份登录"
+  },
+
+  "proveedores": {
+    "admin_title": "供应商管理",
+    "subtitle": "高效管理您的供应商及其产品",
+    "nuevo": "新供应商",
+    "buscar": "搜索供应商或产品...",
+    "filtros": "筛选",
+    "estado": "状态",
+    "todos": "全部",
+    "activo": "活跃",
+    "inactivo": "不活跃",
+    "contrato": "有效合同",
+    "si": "有合同",
+    "no": "无合同",
+    "cargando": "正在加载供应商...",
+    "error": "加载供应商时出错，请重试。",
+    "reintentar": "重试",
+    "no_resultados": "未找到符合条件的供应商",
+    "eliminar_confirm": "确定要删除 {nombre} 吗？",
+    "title": "供应商",
+    "description": "供应商和联系人管理"
+  },
+
+  "ventas": {
+    "back": "返回",
+    "title": "销售管理",
+    "subtitle": "管理和记录所有商业交易",
+    "nueva": "新销售",
+    "buscar": "搜索销售...",
+    "filtros": "筛选",
+    "fecha_desde": "起始日期",
+    "fecha_hasta": "结束日期",
+    "cliente": "客户",
+    "todos": "全部",
+    "registradas": "已登记销售",
+    "no_resultados": "未找到已登记销售"
+  },
+
+  "compras": {
+    "back": "返回",
+    "title": "采购",
+    "subtitle": "管理所有已完成的采购",
+    "nueva": "添加采购",
+    "buscar": "搜索采购...",
+    "filtros": "筛选",
+    "fecha_desde": "起始日期",
+    "fecha_hasta": "结束日期",
+    "proveedor": "供应商",
+    "todos": "全部",
+    "no_resultados": "未找到采购记录"
+  },
+
+  "inventario": {
+    "back": "返回",
+    "title": "库存",
+    "subtitle": "管理您的库存产品和存量",
+    "nuevo": "新项目",
+    "importar_xml": "导入XML",
+    "buscar": "搜索库存...",
+    "filtros_avanzados": "高级筛选",
+    "categoria": "类别",
+    "todas": "全部",
+    "rango_precio": "价格区间",
+    "cargando": "正在加载库存...",
+    "no_resultados": "未找到库存项目。",
+    "description": "库存产品管理"
+  },
+
+  "empleados": {
+    "titulo": "管理",
+    "titulo_span": "员工",
+    "bienvenida": "管理您的公司员工",
+    "nuevo": "新员工",
+    "title": "员工",
+    "description": "员工和排班管理"
+  },
+
+  "clientes": {
+    "back": "返回",
+    "titulo": "客户管理",
+    "bienvenida": "管理您的客户及其信息",
+    "nuevo": "新客户",
+    "title": "客户",
+    "description": "客户及其数据管理"
+  },
+
+  "ordenes": {
+    "title": "订单",
+    "description": "订单和销售管理"
+  },
+
+  "conversiones": {
+    "title": "工具",
+    "description": "各种实用工具"
+  },
+
+  "estadisticas": {
+    "title": "统计",
+    "clientes": "客户",
+    "empleados": "员工",
+    "ventas": "销售",
+    "compras": "采购",
+    "horarios": "排班",
+    "inventario": "库存",
+    "proveedores": "供应商",
+    "description": "数据和绩效分析",
+    "back": "返回",
+    "resumen": "统计摘要",
+    "beneficio_neto": "净利润",
+    "ingresos": "收入",
+    "costes": "成本",
+    "mayor_venta": "最大销售额",
+    "mayor_compra": "最大采购额",
+    "empleado_mes": "本月员工",
+    "horas_trabajadas": "工作小时数",
+    "ingresos_vs_costes": "收入与成本（最近几个月）",
+    "no_datos_grafico": "没有足够的数据来显示图表。",
+    "distribucion_horas": "工作时间分布",
+    "desc_clientes": "客户分析及分布。",
+    "desc_empleados": "员工和职位统计。",
+    "desc_ventas": "销售趋势和畅销产品。",
+    "desc_compras": "历史和主要供应商。",
+    "desc_horarios": "工作时间的控制和分析。",
+    "desc_inventario": "库存、类别和关键产品。",
+    "desc_proveedores": "供应商关系及其产品。"
+  },
+
+  "logout": {
+    "title": "退出登录",
+    "description": "退出系统"
+  },
+
+  "utilidades": {
+    "back": "返回",
+    "title": "专业工具",
+    "subtitle": "用于沙发企业日常管理的工具、笔记和日程",
+    "tareas": "任务",
+    "eventos": "事件",
+    "unidades": "单位换算",
+    "calculadora": "快速计算器",
+    "retales": "余料计算器",
+    "tapizado": "软包成本",
+    "metros": "米转平方米"
+  }
+}

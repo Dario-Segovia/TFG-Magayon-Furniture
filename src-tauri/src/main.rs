@@ -1,3 +1,51 @@
+/*!
+ * Archivo: main.rs
+ * Proyecto: Magayon Furniture
+ * 
+ * Descripción general:
+ * --------------------
+ * Este archivo constituye el punto de entrada principal de la aplicación Tauri escrita en Rust.
+ * Se encarga de:
+ * 
+ * 1. **Inicializar la aplicación**:
+ *    - Carga las variables de entorno (`.env`).
+ *    - Conecta con la base de datos PostgreSQL mediante `sqlx`.
+ *    - Configura el plugin de sistema de archivos (`tauri_plugin_fs`).
+ * 
+ * 2. **Gestión de estado y comandos**:
+ *    - Administra el estado de conexión (`PgPool`) mediante `State`.
+ *    - Expone múltiples comandos a la interfaz frontend mediante `#[tauri::command]`, agrupados por módulos funcionales como empleados, clientes, proveedores, inventario, ventas, compras y estadísticas.
+ * 
+ * 3. **Módulos incluidos**:
+ *    - `empleados`: Gestión de CRUD de empleados.
+ *    - `horarios`: Gestión de horarios de empleados.
+ *    - `clientes`: Gestión de clientes.
+ *    - `proveedores`: CRUD de proveedores y productos asociados.
+ *    - `inventario`: CRUD del inventario.
+ *    - `ventas`: Registro y gestión de ventas.
+ *    - `compras`: Registro y gestión de compras.
+ *    - `estadisticas`: Cálculo de métricas generales.
+ *    - `stats`: Submódulo para estadísticas específicas por entidad (clientes, empleados, etc).
+ * 
+ * 4. **Login seguro**:
+ *    - La función `login` valida las credenciales de usuario consultando la base de datos y verificando contraseñas cifradas con `bcrypt`.
+ * 
+ * 5. **Ejecución**:
+ *    - Usa `tokio::main` para habilitar funciones asincrónicas.
+ *    - Construye y ejecuta la aplicación Tauri con todos los comandos registrados.
+ * 
+ * Dependencias principales:
+ * - `tauri`, `tauri_plugin_fs`
+ * - `dotenvy`, `dotenvy_macro`
+ * - `sqlx`
+ * - `bcrypt`
+ * 
+ * Notas:
+ * -------
+ * Este archivo actúa como un **orquestador de módulos y comandos**, manteniendo el núcleo de configuración de la aplicación. Toda la lógica de negocio está separada en módulos para mantener un diseño modular y limpio.
+ */
+
+
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 #[warn(dead_code)]
 use bcrypt::verify;

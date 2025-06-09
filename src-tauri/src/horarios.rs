@@ -1,3 +1,37 @@
+/*!
+ * Archivo: horarios.rs
+ * Proyecto: Magayon Furniture
+ * 
+ * Descripción general:
+ * --------------------
+ * Este módulo gestiona las operaciones relacionadas con los horarios laborales de los empleados.
+ * Permite crear, consultar, actualizar y eliminar registros de horarios, facilitando la organización y planificación de turnos.
+ * 
+ * Funcionalidades principales:
+ * ----------------------------
+ * 1. `get_horarios`:  
+ *    Obtiene la lista completa de horarios registrados, con detalles como empleado, fecha, hora de inicio y fin, tipo de turno, etc.
+ * 
+ * 2. `create_horario`:  
+ *    Permite crear un nuevo registro de horario para un empleado.
+ * 
+ * 3. `update_horario`:  
+ *    Actualiza un horario existente con nuevos datos (horas, fechas, tipo de turno).
+ * 
+ * 4. `delete_horario`:  
+ *    Elimina un registro de horario de la base de datos.
+ * 
+ * Dependencias esperadas:
+ * -----------------------
+ * - `sqlx` para la gestión de la base de datos PostgreSQL.
+ * - `tauri::command` para exponer estas funciones al frontend de la aplicación.
+ * 
+ * Notas:
+ * ------
+ * - Es importante validar solapamientos o inconsistencias en los horarios antes de la inserción o actualización.
+ * - Se espera que los horarios estén vinculados a los empleados existentes en la base de datos.
+ */
+
 use serde::{Deserialize, Serialize};
 use chrono::{NaiveDate, NaiveTime};
 use sqlx::{FromRow, PgPool};

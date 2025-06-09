@@ -3,13 +3,13 @@
     <div class="header-content">
       <div class="header-text">
         <h1 class="app-title">
-          <i class="fas fa-user-tie"></i> Gestión de <span>Empleados</span>
+          <i class="fas fa-user-tie"></i> {{ $t('empleados.titulo') }} <span>{{ $t('empleados.titulo_span') }}</span>
         </h1>
-        <p class="welcome-message">Administra el personal de tu empresa</p>
+        <p class="welcome-message">{{ $t('empleados.bienvenida') }}</p>
       </div>
       <div class="header-actions">
         <button @click="$emit('create')" class="header-action-btn">
-          <i class="fas fa-user-plus"></i> Nuevo
+          <i class="fas fa-user-plus"></i> {{ $t('empleados.nuevo') }}
         </button>
       </div>
     </div>
@@ -17,6 +17,8 @@
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n';
+const { t: $t } = useI18n();
 defineEmits(['create', 'show-calendar']);
 </script>
 

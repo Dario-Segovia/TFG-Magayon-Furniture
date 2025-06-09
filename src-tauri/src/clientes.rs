@@ -1,3 +1,36 @@
+/*!
+ * Archivo: clientes.rs
+ * Proyecto: Magayon Furniture
+ * 
+ * Descripción general:
+ * --------------------
+ * Este módulo gestiona todas las operaciones relacionadas con los clientes del sistema.
+ * Permite crear, obtener, actualizar y eliminar información de clientes, así como obtener
+ * datos detallados por identificador.
+ * 
+ * Funcionalidades principales:
+ * ----------------------------
+ * - Crear nuevos clientes con sus datos básicos.
+ * - Obtener listados completos de clientes.
+ * - Obtener información detallada de un cliente mediante su ID.
+ * - Actualizar datos de clientes existentes.
+ * - Eliminar clientes según sea necesario.
+ * 
+ * Características:
+ * ----------------
+ * - Implementa comandos asincrónicos compatibles con Tauri para ser invocados desde el frontend.
+ * - Realiza consultas SQL usando `sqlx` para interactuar con la base de datos PostgreSQL.
+ * - Gestiona errores y validaciones para asegurar integridad y consistencia de los datos.
+ * 
+ * Notas:
+ * -------
+ * - Forma parte del sistema modular que integra clientes, compras, ventas y otros módulos.
+ * - Facilita la gestión y mantenimiento de la información de clientes para el negocio.
+ */
+
+
+
+
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use tauri::State;

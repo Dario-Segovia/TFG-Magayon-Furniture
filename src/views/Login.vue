@@ -14,6 +14,12 @@
         @click="changeLang('en')"
         :class="{ active: locale === 'en' }"
       />
+      <img
+        src="/banderas/zh.png"
+        alt="中文"
+        @click="changeLang('zh')"
+        :class="{ active: locale === 'zh' }"
+      />
     </div>
     <div v-if="isLoading" class="loading-overlay">
     <div class="spinner"></div>

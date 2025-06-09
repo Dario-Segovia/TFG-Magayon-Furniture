@@ -1,22 +1,22 @@
 <template>
   <button class="btn-back" @click="$router.back()">
-  <i class="fas fa-arrow-left"></i> Atrás
-</button>
+    <i class="fas fa-arrow-left"></i> {{ $t('compras.back') }}
+  </button>
   <div class="inventario-container fade-in">
     <div class="header">
       <div class="header-content">
-        <h1>Compras</h1>
-        <p class="subtitle">Gestión de todas las compras realizadas</p>
+        <h1>{{ $t('compras.title') }}</h1>
+        <p class="subtitle">{{ $t('compras.subtitle') }}</p>
       </div>
       <button class="btn-primary" @click="showAgregarModal = true">
-        Agregar Compra
+        {{ $t('compras.nueva') }}
       </button>
     </div>
 
     <!-- Filtros -->
     <div class="filtros-container">
       <div class="search-box">
-        <input type="text" placeholder="Buscar compras..." v-model="filtroTexto" />
+        <input type="text" :placeholder="$t('compras.buscar')" v-model="filtroTexto" />
         <i>
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"></circle>
@@ -25,7 +25,7 @@
         </i>
       </div>
       <div class="filtros-avanzados" style="position:relative;">
-       <button @click="toggleFiltrosAvanzados">
+        <button @click="toggleFiltrosAvanzados">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="4" y1="21" x2="4" y2="14"></line>
             <line x1="4" y1="10" x2="4" y2="3"></line>
@@ -37,21 +37,21 @@
             <line x1="9" y1="8" x2="15" y2="8"></line>
             <line x1="17" y1="16" x2="23" y2="16"></line>
           </svg>
-          Filtros
+          {{ $t('compras.filtros') }}
         </button>
         <div v-if="mostrarFiltros" class="filtros-content">
           <div class="filtro-group">
-            <label>Fecha desde</label>
+            <label>{{ $t('compras.fecha_desde') }}</label>
             <input type="date" class="filtro-input" v-model="filtroFechaDesde">
           </div>
           <div class="filtro-group">
-            <label>Fecha hasta</label>
+            <label>{{ $t('compras.fecha_hasta') }}</label>
             <input type="date" class="filtro-input" v-model="filtroFechaHasta">
           </div>
           <div class="filtro-group">
-            <label>Proveedor</label>
+            <label>{{ $t('compras.proveedor') }}</label>
             <select class="filtro-select" v-model="filtroProveedor">
-              <option value="">Todos</option>
+              <option value="">{{ $t('compras.todos') }}</option>
               <option 
                 v-for="proveedor in proveedoresOrdenados" 
                 :key="proveedor.id" 
@@ -78,7 +78,7 @@
           />
         </template>
         <div v-else class="no-results">
-          No se encontraron compras registradas
+          {{ $t('compras.no_resultados') }}
         </div>
       </div>
     </div>

@@ -1,15 +1,14 @@
 <template>
   <button class="btn-back" @click="$router.back()">
-    <i class="fas fa-arrow-left"></i> Atrás
+    <i class="fas fa-arrow-left"></i> {{ $t('clientes.back') }}
   </button>
   <div class="clientes-page">
     <div class="clientes-header fade-in">
       <div class="header-content">
-        <h1><i class="fas fa-users"></i> Gestión de Clientes</h1>
-        <p class="subtitle">Administra tus clientes y su información</p>
+        <h1><i class="fas fa-users"></i> {{ $t('clientes.titulo') }}</h1>
+        <p class="subtitle">{{ $t('clientes.bienvenida') }}</p>
       </div>
-      <!-- Aquí puedes agregar un botón para nuevo cliente si lo necesitas -->
-      <!-- <button class="btn-primary"><i class="fas fa-plus"></i> Nuevo Cliente</button> -->
+      <!-- <button class="btn-primary"><i class="fas fa-plus"></i> {{ $t('clientes.nuevo') }}</button> -->
     </div>
     <div class="clientes-content">
       <ClientesTabla />

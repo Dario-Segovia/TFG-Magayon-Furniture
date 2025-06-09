@@ -5,6 +5,159 @@
       "password": "Password",
       "submit": "Login",
       "access": "Access granted as"
-    }
-  }
-  
+    },
+
+    "proveedores": {
+    "admin_title": "Suppliers Management",
+    "subtitle": "Manage your suppliers and their products efficiently",
+    "nuevo": "New Supplier",
+    "buscar": "Search suppliers or products...",
+    "filtros": "Filters",
+    "estado": "Status",
+    "todos": "All",
+    "activo": "Active",
+    "inactivo": "Inactive",
+    "contrato": "Valid contract",
+    "si": "With contract",
+    "no": "Without contract",
+    "cargando": "Loading suppliers...",
+    "error": "Error loading suppliers. Please try again.",
+    "reintentar": "Retry",
+    "no_resultados": "No suppliers found matching the search criteria",
+    "eliminar_confirm": "Are you sure you want to delete {nombre}?",
+    "title": "Suppliers",
+    "description": "Supplier and contact management"
+  },
+
+  "ventas": {
+    "back": "Back",
+    "title": "Sales Management",
+    "subtitle": "Manage and record all commercial transactions",
+    "nueva": "New Sale",
+    "buscar": "Search sales...",
+    "filtros": "Filters",
+    "fecha_desde": "Date from",
+    "fecha_hasta": "Date to",
+    "cliente": "Customer",
+    "todos": "All",
+    "registradas": "Registered Sales",
+    "no_resultados": "No registered sales found"
+  },
+
+  "compras": {
+    "back": "Back",
+    "title": "Purchases",
+    "subtitle": "Management of all completed purchases",
+    "nueva": "Add Purchase",
+    "buscar": "Search purchases...",
+    "filtros": "Filters",
+    "fecha_desde": "Date from",
+    "fecha_hasta": "Date to",
+    "proveedor": "Supplier",
+    "todos": "All",
+    "no_resultados": "No purchases found"
+  },
+
+  "inventario": {
+    "back": "Back",
+    "title": "Inventory",
+    "subtitle": "Manage your inventory products and stock",
+    "nuevo": "New Item",
+    "importar_xml": "Import XML",
+    "buscar": "Search inventory...",
+    "filtros_avanzados": "Advanced Filters",
+    "categoria": "Category",
+    "todas": "All",
+    "rango_precio": "Price Range",
+    "cargando": "Loading inventory...",
+    "no_resultados": "No items found in inventory.",
+    "description": "Inventory product management"
+  },
+
+  "empleados": {
+    "titulo": "Employee",
+    "titulo_span": "Management",
+    "bienvenida": "Manage your company's staff",
+    "nuevo": "New",
+    "title": "Employees",
+    "description": "Employee and schedule management"
+  },
+
+  "clientes": {
+    "back": "Back",
+    "titulo": "Customer Management",
+    "bienvenida": "Manage your customers and their information",
+    "nuevo": "New Customer",
+    "title": "Clients",
+    "description": "Client management and their data"
+  },
+
+  "ordenes": {
+    "title": "Orders",
+    "description": "Order and sales management"
+  },
+
+  "conversiones": {
+    "title": "Utilities",
+    "description": "Various helpful tools"
+  },
+
+  "estadisticas": {
+    "title": "Statistics",
+    "description": "Data and performance analysis"
+  },
+
+  "logout": {
+    "title": "Log Out",
+    "description": "Exit the system"
+  },
+  "utilidades": {
+  "back": "Back",
+  "title": "Professional Utilities",
+  "subtitle": "Tools, notes, and agenda for the daily management of your sofa business",
+  "tareas": "Tasks",
+  "eventos": "Events",
+  "unidades": "Unit Converter",
+  "calculadora": "Quick Calculator",
+  "retales": "Remnants Calculator",
+  "tapizado": "Upholstery Cost",
+  "metros": "ML to M²"
+},
+"estadisticas": {
+  "title": "Statistics",
+  "clientes": "Clients",
+  "empleados": "Employees",
+  "ventas": "Sales",
+  "compras": "Purchases",
+  "horarios": "Schedules",
+  "inventario": "Inventory",
+  "proveedores": "Suppliers",
+  "description": "Data and performance analysis",
+    "back": "Back",
+  "resumen": "Statistics Summary",
+  "beneficio_neto": "Net Profit",
+  "ingresos": "Income",
+  "costes": "Costs",
+  "mayor_venta": "Highest Sale",
+  "mayor_compra": "Highest Purchase",
+  "empleado_mes": "Employee of the Month",
+  "horas_trabajadas": "Worked hours",
+  "ingresos_vs_costes": "Income vs Costs (last months)",
+  "no_datos_grafico": "Not enough data to display the chart.",
+  "distribucion_horas": "Worked hours distribution",
+  "clientes": "Clients",
+  "desc_clientes": "Client analysis and distribution.",
+  "empleados": "Employees",
+  "desc_empleados": "Staff and position statistics.",
+  "ventas": "Sales",
+  "desc_ventas": "Evolution and best-selling products.",
+  "compras": "Purchases",
+  "desc_compras": "History and main suppliers.",
+  "horarios": "Schedules",
+  "desc_horarios": "Control and analysis of worked hours.",
+  "inventario": "Inventory",
+  "desc_inventario": "Stock, categories and critical products.",
+  "proveedores": "Suppliers",
+  "desc_proveedores": "Relationship and products by supplier."
+}
+}

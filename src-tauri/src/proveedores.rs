@@ -1,3 +1,48 @@
+/*!
+ * Archivo: proveedores.rs
+ * Proyecto: Magayon Furniture
+ * 
+ * Descripción general:
+ * --------------------
+ * Este módulo implementa la lógica para la gestión de **proveedores** y los productos que cada uno ofrece.
+ * Se encarga tanto de las operaciones básicas (crear, obtener, actualizar y eliminar proveedores) como de la vinculación de productos a proveedores.
+ * Todas las funciones están expuestas al frontend mediante comandos de Tauri.
+ * 
+ * Funcionalidades principales:
+ * ----------------------------
+ * 1. `crear_proveedor`:  
+ *    Inserta un nuevo proveedor en la base de datos. Incluye datos como nombre, dirección, país, contacto, etc.
+ * 
+ * 2. `obtener_proveedores`:  
+ *    Recupera una lista completa de los proveedores registrados.
+ * 
+ * 3. `actualizar_proveedor`:  
+ *    Permite modificar los datos de un proveedor existente.
+ * 
+ * 4. `eliminar_proveedor`:  
+ *    Elimina un proveedor del sistema. Dependiendo del diseño, puede requerir validar si tiene productos vinculados.
+ * 
+ * 5. `agregar_producto_proveedor`:  
+ *    Asocia un producto específico a un proveedor. Útil para definir qué productos puede ofrecer cada uno.
+ * 
+ * 6. `obtener_productos_proveedor`:  
+ *    Devuelve todos los productos asignados a un proveedor.
+ * 
+ * 7. `eliminar_producto_proveedor`:  
+ *    Desvincula un producto de un proveedor, sin eliminar el producto en sí del inventario.
+ * 
+ * Dependencias esperadas:
+ * -----------------------
+ * - `sqlx` para acceso a la base de datos PostgreSQL.
+ * - `serde` para (de)serialización de estructuras JSON.
+ * - `tauri::command` para exponer funciones al frontend.
+ * 
+ * Notas:
+ * ------
+ * - Se recomienda validar los IDs antes de ejecutar operaciones sobre proveedores o productos.
+ * - Si un proveedor se elimina, es conveniente definir si también se eliminan los productos vinculados o solo la relación.
+ */
+
 use rust_decimal::Decimal;
 use tauri::State;
 use sqlx::{PgPool, FromRow};

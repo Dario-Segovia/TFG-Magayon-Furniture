@@ -1,16 +1,16 @@
 <template>
   <!-- Botón atrás -->
   <button class="btn-back" @click="goBack">
-    <i class="fas fa-arrow-left"></i> Atrás
+    <i class="fas fa-arrow-left"></i> {{ $t('utilidades.back') }}
   </button>
   <div class="agenda-container">
     <div class="header">
       <div class="header-content">
         <h1>
-          <i class="fas fa-calendar-alt"></i> Utilidades Profesionales
+          <i class="fas fa-calendar-alt"></i> {{ $t('utilidades.title') }}
         </h1>
         <p class="subtitle">
-          Herramientas, apuntes y agenda para la gestión diaria de tu empresa de sofás
+          {{ $t('utilidades.subtitle') }}
         </p>
       </div>
     </div>
@@ -18,32 +18,31 @@
     <div class="dashboard-grid">
       <div class="dashboard-card card-btn" @click="modalAbierto = 'tareas'">
         <i class="fas fa-tasks card-icon"></i>
-        <span>Tareas</span>
+        <span>{{ $t('utilidades.tareas') }}</span>
       </div>
       <div class="dashboard-card card-btn" @click="modalAbierto = 'eventos'">
         <i class="fas fa-calendar card-icon"></i>
-        <span>Eventos</span>
+        <span>{{ $t('utilidades.eventos') }}</span>
       </div>
-     
       <div class="dashboard-card card-btn" @click="modalAbierto = 'unidades'">
         <i class="fas fa-ruler-combined card-icon"></i>
-        <span>Conversor de Unidades</span>
+        <span>{{ $t('utilidades.unidades') }}</span>
       </div>
       <div class="dashboard-card card-btn" @click="modalAbierto = 'calculadora'">
         <i class="fas fa-calculator card-icon"></i>
-        <span>Calculadora Rápida</span>
+        <span>{{ $t('utilidades.calculadora') }}</span>
       </div>
       <div class="dashboard-card card-btn" @click="modalAbierto = 'retales'">
         <i class="fas fa-cut card-icon"></i>
-        <span>Calculadora de Retales</span>
+        <span>{{ $t('utilidades.retales') }}</span>
       </div>
       <div class="dashboard-card card-btn" @click="modalAbierto = 'tapizado'">
         <i class="fas fa-couch card-icon"></i>
-        <span>Coste de Tapizado</span>
+        <span>{{ $t('utilidades.tapizado') }}</span>
       </div>
       <div class="dashboard-card card-btn" @click="modalAbierto = 'metros'">
         <i class="fas fa-ruler-horizontal card-icon"></i>
-        <span>ML a M²</span>
+        <span>{{ $t('utilidades.metros') }}</span>
       </div>
     </div>
 

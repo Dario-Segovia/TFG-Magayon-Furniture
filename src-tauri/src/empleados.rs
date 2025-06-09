@@ -1,3 +1,34 @@
+/*!
+ * Archivo: empleados.rs
+ * Proyecto: Magayon Furniture
+ * 
+ * Descripción general:
+ * --------------------
+ * Este módulo gestiona todo lo relacionado con la entidad "empleado" dentro del sistema.
+ * Incluye funciones para crear, obtener, actualizar y eliminar empleados en la base de datos.
+ * También puede manejar operaciones relacionadas con la gestión del personal.
+ * 
+ * Funcionalidades principales:
+ * ----------------------------
+ * - Crear un nuevo empleado con los datos necesarios.
+ * - Obtener la lista completa de empleados.
+ * - Actualizar los datos de un empleado existente.
+ * - Eliminar un empleado de la base de datos.
+ * 
+ * Características:
+ * ----------------
+ * - Usa consultas SQL con `sqlx` para interactuar con la base de datos PostgreSQL.
+ * - Implementa funciones como comandos Tauri para integrarse con el frontend.
+ * - Maneja validaciones básicas y posibles errores en las operaciones CRUD.
+ * 
+ * Notas:
+ * -------
+ * - Las funciones son asíncronas para optimizar el rendimiento y evitar bloqueos.
+ * - Está diseñado para integrarse en una arquitectura modular junto con otros módulos del proyecto.
+ */
+
+
+
 use sqlx::{PgPool, postgres::PgRow, Row};
 use tauri::{command, State};
 use serde::{Serialize, Deserialize};

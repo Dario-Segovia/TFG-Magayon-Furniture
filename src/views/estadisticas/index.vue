@@ -1,14 +1,14 @@
 <template>
   <div style="padding: 32px; max-width: 400px; margin: auto;">
-    <h1>Estadísticas</h1>
+    <h1>{{ $t('estadisticas.title') }}</h1>
     <div style="display: flex; flex-direction: column; gap: 16px;">
-      <button @click="go('clientes')">Clientes</button>
-      <button @click="go('empleados')">Empleados</button>
-      <button @click="go('ventas')">Ventas</button>
-      <button @click="go('compras')">Compras</button>
-      <button @click="go('horarios')">Horarios</button>
-      <button @click="go('inventario')">Inventario</button>
-      <button @click="go('proveedores')">Proveedores</button>
+      <button @click="go('clientes')">{{ $t('estadisticas.clientes') }}</button>
+      <button @click="go('empleados')">{{ $t('estadisticas.empleados') }}</button>
+      <button @click="go('ventas')">{{ $t('estadisticas.ventas') }}</button>
+      <button @click="go('compras')">{{ $t('estadisticas.compras') }}</button>
+      <button @click="go('horarios')">{{ $t('estadisticas.horarios') }}</button>
+      <button @click="go('inventario')">{{ $t('estadisticas.inventario') }}</button>
+      <button @click="go('proveedores')">{{ $t('estadisticas.proveedores') }}</button>
     </div>
   </div>
 </template>

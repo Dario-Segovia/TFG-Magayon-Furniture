@@ -5,5 +5,160 @@
       "password": "Contraseña",
       "submit": "Entrar",
       "access": "Acceso concedido como"
-    }
+    },
+
+    "proveedores": {
+      "admin_title": "Administración de Proveedores",
+      "subtitle": "Gestiona tus proveedores y sus productos de manera eficiente",
+      "nuevo": "Nuevo Proveedor",
+      "buscar": "Buscar proveedores o productos...",
+      "filtros": "Filtros",
+      "estado": "Estado",
+      "todos": "Todos",
+      "activo": "Activos",
+      "inactivo": "Inactivos",
+      "contrato": "Contrato vigente",
+      "si": "Con contrato",
+      "no": "Sin contrato",
+      "cargando": "Cargando proveedores...",
+      "error": "Error al cargar los proveedores. Por favor, intente nuevamente.",
+      "reintentar": "Reintentar",
+      "no_resultados": "No se encontraron proveedores que coincidan con los criterios de búsqueda",
+      "eliminar_confirm": "¿Estás seguro de eliminar a {nombre}?",
+      "title": "Proveedores",
+      "description": "Gestión de proveedores y contactos"
+    },
+
+    "ventas": {
+      "back": "Atrás",
+      "title": "Gestión de Ventas",
+      "subtitle": "Administra y registra todas las transacciones comerciales",
+      "nueva": "Nueva Venta",
+      "buscar": "Buscar ventas...",
+      "filtros": "Filtros",
+      "fecha_desde": "Fecha desde",
+      "fecha_hasta": "Fecha hasta",
+      "cliente": "Cliente",
+      "todos": "Todos",
+      "registradas": "Ventas Registradas",
+      "no_resultados": "No se encontraron ventas registradas"
+    },
+
+    "compras": {
+      "back": "Atrás",
+      "title": "Compras",
+      "subtitle": "Gestión de todas las compras realizadas",
+      "nueva": "Agregar Compra",
+      "buscar": "Buscar compras...",
+      "filtros": "Filtros",
+      "fecha_desde": "Fecha desde",
+      "fecha_hasta": "Fecha hasta",
+      "proveedor": "Proveedor",
+      "todos": "Todos",
+      "no_resultados": "No se encontraron compras registradas"
+    },
+
+    "inventario": {
+      "back": "Atrás",
+      "title": "Inventario",
+      "subtitle": "Gestiona los productos y existencias de tu inventario",
+      "nuevo": "Nuevo Ítem",
+      "importar_xml": "Importar XML",
+      "buscar": "Buscar en inventario...",
+      "filtros_avanzados": "Filtros Avanzados",
+      "categoria": "Categoría",
+      "todas": "Todas",
+      "rango_precio": "Rango de Precio",
+      "cargando": "Cargando inventario...",
+      "no_resultados": "No se encontraron ítems en el inventario.",
+      "description": "Gestión de productos en inventario"
+    },
+
+    "empleados": {
+      "titulo": "Gestión de",
+      "titulo_span": "Empleados",
+      "bienvenida": "Administra el personal de tu empresa",
+      "nuevo": "Nuevo",
+      "title": "Empleados",
+      "description": "Gestión de empleados y horarios"
+    },
+
+    "clientes": {
+      "back": "Atrás",
+      "titulo": "Gestión de Clientes",
+      "bienvenida": "Administra tus clientes y su información",
+      "nuevo": "Nuevo Cliente",
+      "title": "Clientes",
+      "description": "Gestión de clientes y sus datos"
+    },
+
+    "ordenes": {
+      "title": "Órdenes",
+      "description": "Gestión de órdenes y ventas"
+    },
+
+    "conversiones": {
+      "title": "Utilidades",
+      "description": "Herramientas útiles varias"
+    },
+
+    "estadisticas": {
+      "title": "Estadísticas",
+      "description": "Análisis de datos y rendimiento"
+    },
+
+    "logout": {
+      "title": "Cerrar Sesión",
+      "description": "Salir del sistema"
+    },
+
+    "utilidades": {
+  "back": "Atrás",
+  "title": "Utilidades Profesionales",
+  "subtitle": "Herramientas, apuntes y agenda para la gestión diaria de tu empresa de sofás",
+  "tareas": "Tareas",
+  "eventos": "Eventos",
+  "unidades": "Conversor de Unidades",
+  "calculadora": "Calculadora Rápida",
+  "retales": "Calculadora de Retales",
+  "tapizado": "Coste de Tapizado",
+  "metros": "ML a M²"
+},
+"estadisticas": {
+  "title": "Estadísticas",
+  "clientes": "Clientes",
+  "empleados": "Empleados",
+  "ventas": "Ventas",
+  "compras": "Compras",
+  "horarios": "Horarios",
+  "inventario": "Inventario",
+  "proveedores": "Proveedores",
+  "description": "Análisis de datos y rendimiento",
+    "back": "Atrás",
+  "resumen": "Resumen de Estadísticas",
+  "beneficio_neto": "Beneficio Neto",
+  "ingresos": "Ingresos",
+  "costes": "Costes",
+  "mayor_venta": "Mayor venta",
+  "mayor_compra": "Mayor compra",
+  "empleado_mes": "Empleado del mes",
+  "horas_trabajadas": "Horas trabajadas",
+  "ingresos_vs_costes": "Ingresos vs Costes (últimos meses)",
+  "no_datos_grafico": "No hay datos suficientes para mostrar el gráfico.",
+  "distribucion_horas": "Distribución de horas trabajadas",
+  "clientes": "Clientes",
+  "desc_clientes": "Análisis de clientes y su distribución.",
+  "empleados": "Empleados",
+  "desc_empleados": "Estadísticas de personal y puestos.",
+  "ventas": "Ventas",
+  "desc_ventas": "Evolución y productos más vendidos.",
+  "compras": "Compras",
+  "desc_compras": "Histórico y proveedores principales.",
+  "horarios": "Horarios",
+  "desc_horarios": "Control y análisis de horas trabajadas.",
+  "inventario": "Inventario",
+  "desc_inventario": "Stock, categorías y productos críticos.",
+  "proveedores": "Proveedores",
+  "desc_proveedores": "Relación y productos por proveedor."
+}
   }

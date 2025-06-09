@@ -1,3 +1,44 @@
+/*!
+ * Archivo: inventario.rs
+ * Proyecto: Magayon Furniture
+ * 
+ * Descripción general:
+ * --------------------
+ * Este módulo gestiona todas las operaciones relacionadas con el **inventario de productos** de la empresa.
+ * Incluye funciones para obtener la lista de productos, añadir nuevos ítems, actualizar detalles y eliminar productos del inventario.
+ * Además, se encarga de la lógica para importar inventario desde archivos XML.
+ * 
+ * Funcionalidades principales:
+ * ----------------------------
+ * 1. `get_inventory`:  
+ *    Recupera la lista completa de productos en el inventario, con sus detalles principales (nombre, cantidad, categoría, precio, etc).
+ * 
+ * 2. `get_inventory_item`:  
+ *    Obtiene los detalles completos de un producto específico dado su ID.
+ * 
+ * 3. `add_inventory_item`:  
+ *    Añade un nuevo producto al inventario, incluyendo información como nombre, categoría, cantidad inicial y precio.
+ * 
+ * 4. `update_inventory_item`:  
+ *    Actualiza los datos de un producto existente en el inventario.
+ * 
+ * 5. `delete_inventory_item`:  
+ *    Elimina un producto del inventario.
+ * 
+ * 6. `importar_inventario_xml`:  
+ *    Permite importar productos al inventario desde un archivo XML, facilitando la carga masiva de datos.
+ * 
+ * Dependencias esperadas:
+ * -----------------------
+ * - `sqlx` para la conexión y ejecución de consultas en PostgreSQL.
+ * - `serde` y/o `quick-xml` para procesar archivos XML (en la función de importación).
+ * - `tauri::command` para exponer las funciones al frontend.
+ * 
+ * Notas:
+ * ------
+ * - Las operaciones de actualización y eliminación deberían validar la existencia previa del producto.
+ * - La importación XML debe manejar errores de formato y evitar duplicados según la lógica del proyecto.
+ */
 use sqlx::{PgPool, Row, postgres::PgRow};
 use tauri::State;
 use serde::{Serialize, Deserialize};

@@ -1,3 +1,33 @@
+/*!
+ * Archivo: estadisticas.rs
+ * Proyecto: Magayon Furniture
+ * 
+ * Descripción general:
+ * --------------------
+ * Este módulo está dedicado a la obtención y procesamiento de datos estadísticos relacionados con las operaciones
+ * del sistema. Proporciona funciones que generan informes y métricas útiles para el análisis del negocio.
+ * 
+ * Funcionalidades principales:
+ * ----------------------------
+ * - Obtención de ventas por mes, permitiendo analizar tendencias temporales.
+ * - Cálculo de los productos más vendidos para identificar artículos clave.
+ * - Identificación del stock crítico para gestionar inventarios y evitar faltantes.
+ * - Cálculo de ingresos por categorías para evaluar el rendimiento de diferentes líneas de productos.
+ * - Análisis combinado de ventas y clientes para estudiar el comportamiento y fidelidad.
+ * 
+ * Dependencias esperadas:
+ * -----------------------
+ * - Uso de consultas SQL optimizadas para extracción eficiente de datos.
+ * - Funciones expuestas como comandos Tauri para ser consumidas desde el frontend.
+ * 
+ * Notas:
+ * ------
+ * - Se recomienda ejecutar estas funciones en contextos asíncronos para no bloquear la aplicación.
+ * - Los resultados se suelen presentar en forma de listas o agregados para facilitar su uso en visualizaciones.
+ */
+
+
+
 use sqlx::{PgPool, Row, postgres::PgRow};
 use tauri::State;
 

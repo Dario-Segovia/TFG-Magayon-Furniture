@@ -15,8 +15,8 @@
           <i class="fas fa-users"></i>
         </div>
         <div class="module-content">
-          <h3>Empleados</h3>
-          <p>Gestión de empleados y horarios</p>
+          <h3>{{ $t('empleados.title') }}</h3>
+          <p>{{ $t('empleados.description') }}</p>
         </div>
         <div class="module-hover-effect"></div>
       </div>
@@ -27,8 +27,8 @@
           <i class="fas fa-boxes"></i>
         </div>
         <div class="module-content">
-          <h3>Inventario</h3>
-          <p>Gestión de productos en inventario</p>
+          <h3>{{ $t('inventario.title') }}</h3>
+          <p>{{ $t('inventario.description') }}</p>
         </div>
         <div class="module-hover-effect"></div>
       </div>
@@ -39,8 +39,8 @@
           <i class="fas fa-user-tie"></i>
         </div>
         <div class="module-content">
-          <h3>Clientes</h3>
-          <p>Gestión de clientes y sus datos</p>
+          <h3>{{ $t('clientes.title') }}</h3>
+          <p>{{ $t('clientes.description') }}</p>
         </div>
         <div class="module-hover-effect"></div>
       </div>
@@ -51,8 +51,8 @@
           <i class="fas fa-clipboard-list"></i>
         </div>
         <div class="module-content">
-          <h3>Órdenes</h3>
-          <p>Gestión de pedidos y ventas</p>
+          <h3>{{ $t('ordenes.title') }}</h3>
+          <p>{{ $t('ordenes.description') }}</p>
         </div>
         <div class="module-hover-effect"></div>
       </div>
@@ -63,8 +63,8 @@
           <i class="fas fa-truck-loading"></i>
         </div>
         <div class="module-content">
-          <h3>Proveedores</h3>
-          <p>Gestión de proveedores y contactos</p>
+          <h3>{{ $t('proveedores.title') }}</h3>
+          <p>{{ $t('proveedores.description') }}</p>
         </div>
         <div class="module-hover-effect"></div>
       </div>
@@ -75,8 +75,8 @@
           <i class="fa-solid fa-screwdriver-wrench"></i>
         </div>
         <div class="module-content">
-          <h3>Utilidades</h3>
-          <p>Herramientas diversas de ayuda</p>
+          <h3>{{ $t('conversiones.title') }}</h3>
+          <p>{{ $t('conversiones.description') }}</p>
         </div>
         <div class="module-hover-effect"></div>
       </div>
@@ -87,8 +87,8 @@
           <i class="fas fa-chart-pie"></i>
         </div>
         <div class="module-content">
-          <h3>Estadísticas</h3>
-          <p>Análisis de datos y rendimiento</p>
+          <h3>{{ $t('estadisticas.title') }}</h3>
+          <p>{{ $t('estadisticas.description') }}</p>
         </div>
         <div class="module-hover-effect"></div>
       </div>
@@ -99,8 +99,8 @@
           <i class="fas fa-sign-out-alt"></i>
         </div>
         <div class="module-content">
-          <h3>Cerrar Sesión</h3>
-          <p>Salir del sistema</p>
+          <h3>{{ $t('logout.title') }}</h3>
+          <p>{{ $t('logout.description') }}</p>
         </div>
         <div class="module-hover-effect"></div>
       </div>

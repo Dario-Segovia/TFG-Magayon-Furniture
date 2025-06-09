@@ -1,53 +1,53 @@
 <template>
   <div style="padding: 12px;">
     <!-- Botón atrás -->
-     <button class="btn-back" @click="goBack">
-          <i class="fas fa-arrow-left"></i> Atrás
-        </button>
-    <h1>Resumen de Estadísticas</h1>
+    <button class="btn-back" @click="goBack">
+      <i class="fas fa-arrow-left"></i> {{ $t('estadisticas.back') }}
+    </button>
+    <h1>{{ $t('estadisticas.resumen') }}</h1>
     <div class="kpi-row">
       <div class="kpi-card">
-        <div class="kpi-label">Beneficio Neto</div>
+        <div class="kpi-label">{{ $t('estadisticas.beneficio_neto') }}</div>
         <div class="kpi-value" :class="beneficioNeto >= 0 ? 'positivo' : 'negativo'">
           {{ beneficioNeto.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' }) }}
         </div>
-        <div class="kpi-sub">Ingresos: {{ ingresosTotales.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' }) }}</div>
-        <div class="kpi-sub">Costes: {{ costesTotales.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' }) }}</div>
+        <div class="kpi-sub">{{ $t('estadisticas.ingresos') }}: {{ ingresosTotales.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' }) }}</div>
+        <div class="kpi-sub">{{ $t('estadisticas.costes') }}: {{ costesTotales.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' }) }}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Mayor venta</div>
+        <div class="kpi-label">{{ $t('estadisticas.mayor_venta') }}</div>
         <div class="kpi-value">{{ mayorVenta.total.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' }) }}</div>
         <div class="kpi-sub">{{ mayorVenta.mes }}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Mayor compra</div>
-        <div class="kpi-value"> {{ mayorCompra.total.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' }) }}</div>
+        <div class="kpi-label">{{ $t('estadisticas.mayor_compra') }}</div>
+        <div class="kpi-value">{{ mayorCompra.total.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' }) }}</div>
         <div class="kpi-sub">{{ mayorCompra.mes }}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Empleado del mes</div>
+        <div class="kpi-label">{{ $t('estadisticas.empleado_mes') }}</div>
         <div class="kpi-value">{{ empleadoMes.nombre }}</div>
-        <div class="kpi-sub">Horas trabajadas: {{ empleadoMes.total_horas?.toFixed(2) ?? 0 }}</div>
+        <div class="kpi-sub">{{ $t('estadisticas.horas_trabajadas') }}: {{ empleadoMes.total_horas?.toFixed(2) ?? 0 }}</div>
       </div>
     </div>
 
     <div class="charts-row">
       <div class="chart-box">
-        <h3>Ingresos vs Costes (últimos meses)</h3>
+        <h3>{{ $t('estadisticas.ingresos_vs_costes') }}</h3>
         <div v-if="labelsMeses.length === 0">
-          <em>No hay datos suficientes para mostrar el gráfico.</em>
+          <em>{{ $t('estadisticas.no_datos_grafico') }}</em>
         </div>
         <BarChart
           v-else
           :labels="labelsMeses"
           :datasets="[
-            { label: 'Ingresos', data: datosVentasMes, backgroundColor: 'rgba(46, 125, 50, 0.7)' },
-            { label: 'Costes', data: datosComprasMes, backgroundColor: 'rgba(198, 40, 40, 0.7)' }
+            { label: $t('estadisticas.ingresos'), data: datosVentasMes, backgroundColor: 'rgba(46, 125, 50, 0.7)' },
+            { label: $t('estadisticas.costes'), data: datosComprasMes, backgroundColor: 'rgba(198, 40, 40, 0.7)' }
           ]"
         />
       </div>
       <div class="chart-box">
-        <h3>Distribución de horas trabajadas</h3>
+        <h3>{{ $t('estadisticas.distribucion_horas') }}</h3>
         <PieChart
           :labels="labelsEmpleados"
           :data="datosHorasEmpleados"
@@ -55,7 +55,6 @@
       </div>
     </div>
 
-    
     <div class="nav-grid">
       <router-link
         v-for="area in navAreas"
@@ -67,8 +66,8 @@
         <div class="nav-icon">
           <span :class="area.icon"></span>
         </div>
-        <div class="nav-title">{{ area.title }}</div>
-        <div class="nav-desc">{{ area.desc }}</div>
+        <div class="nav-title">{{ $t(`estadisticas.${area.key}`) }}</div>
+        <div class="nav-desc">{{ $t(`estadisticas.desc_${area.key}`) }}</div>
       </router-link>
     </div>
   </div>

@@ -1,6 +1,7 @@
 import { createI18n } from 'vue-i18n'
 import es from './locales/es.json'
 import en from './locales/en.json'
+import zh from './locales/zh.json' // <-- Añade esta línea
 
 const i18n = createI18n({
   locale: 'es', // Idioma por defecto
@@ -8,7 +9,8 @@ const i18n = createI18n({
   legacy: false, // Necesario para Composition API
   messages: {
     es,
-    en
+    en,
+    zh // <-- Añade aquí
   }
 })
 

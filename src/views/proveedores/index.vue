@@ -1,17 +1,17 @@
 <template>
   <button class="btn-back" @click="$router.back()">
-  <i class="fas fa-arrow-left"></i> Atrás
-</button>
+    <i class="fas fa-arrow-left"></i> {{ $t('global.back', 'Atrás') }}
+  </button>
   <div class="proveedores-container">
     <div class="header">
       <div class="header-content">
         <h1>
-          <i class="fas fa-users-cog"></i> Administración de Proveedores
+          <i class="fas fa-users-cog"></i> {{ $t('proveedores.admin_title') }}
         </h1>
-        <p class="subtitle">Gestiona tus proveedores y sus productos de manera eficiente</p>
+        <p class="subtitle">{{ $t('proveedores.subtitle') }}</p>
       </div>
       <button @click="showNuevoProveedorModal = true" class="btn-primary">
-        <i class="fas fa-plus"></i> Nuevo Proveedor
+        <i class="fas fa-plus"></i> {{ $t('proveedores.nuevo') }}
       </button>
     </div>
 
@@ -19,8 +19,7 @@
       <div class="search-box">
         <input 
           v-model="searchTerm" 
-          placeholder="Buscar proveedores o productos..." 
-         
+          :placeholder="$t('proveedores.buscar')" 
         >
         <i class="fas fa-search"></i>
       </div>
@@ -56,20 +55,20 @@
 
     <!-- Loading state -->
     <div v-if="loading" class="loading-container">
-      <i class="fas fa-spinner fa-spin"></i> Cargando proveedores...
+      <i class="fas fa-spinner fa-spin"></i> {{ $t('proveedores.cargando') }}
     </div>
 
     <!-- Error state -->
     <div v-if="error" class="error-container">
-      <i class="fas fa-exclamation-triangle"></i> {{ error }}
+      <i class="fas fa-exclamation-triangle"></i> {{ $t('proveedores.error') }}
       <button @click="cargarProveedores" class="btn-primary small">
-        Reintentar
+        {{ $t('proveedores.reintentar') }}
       </button>
     </div>
 
     <div class="proveedores-grid">
       <div v-if="proveedoresFiltrados.length === 0" class="no-results">
-        No se encontraron proveedores que coincidan con los criterios de búsqueda
+        {{ $t('proveedores.no_resultados') }}
       </div>
       <div v-else class="cards-grid">
         <ProveedorCard
@@ -101,7 +100,7 @@
     
     <ConfirmacionModal 
       v-if="showConfirmacionModal"
-      :message="`¿Estás seguro de eliminar a ${proveedorSeleccionado?.nombre}?`"
+      :message="$t('proveedores.eliminar_confirm', { nombre: proveedorSeleccionado?.nombre })"
       @confirm="eliminarProveedor"
       @cancel="showConfirmacionModal = false"
     />
@@ -122,6 +121,7 @@ import NuevoProveedorModal from './components/NuevoProveedorModal.vue';
 import EditarProveedorModal from './components/EditarProveedorModal.vue';
 import ConfirmacionModal from './components/ConfirmacionModal.vue';
 import InventarioSelectorModal from './components/InventarioSelectorModal.vue';
+import { useI18n } from "vue-i18n";
 
 export default {
   components: {

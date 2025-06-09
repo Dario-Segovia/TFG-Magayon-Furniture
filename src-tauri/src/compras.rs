@@ -1,3 +1,37 @@
+/*!
+ * Archivo: compras.rs
+ * Proyecto: Magayon Furniture
+ * 
+ * Descripción general:
+ * --------------------
+ * Este módulo se encarga de gestionar todas las operaciones relacionadas con las compras
+ * dentro del sistema. Facilita la creación, actualización, listado y eliminación de registros
+ * de compras, así como la gestión de los detalles de cada compra y la relación con los proveedores.
+ * 
+ * Funcionalidades principales:
+ * ----------------------------
+ * - Registrar nuevas compras con sus datos asociados.
+ * - Actualizar información de compras existentes.
+ * - Listar compras incluyendo datos relevantes del proveedor.
+ * - Gestionar los detalles específicos de cada compra (productos, cantidades, precios).
+ * - Eliminar compras y sus detalles relacionados.
+ * - Buscar productos en el inventario para facilitar la creación de compras.
+ * - Listar y gestionar proveedores vinculados a las compras.
+ * 
+ * Características:
+ * ----------------
+ * - Utiliza consultas SQL asíncronas mediante `sqlx` para interactuar con la base de datos PostgreSQL.
+ * - Expone funciones como comandos Tauri para comunicación con el frontend.
+ * - Maneja control de errores y validaciones básicas para mantener la integridad de los datos.
+ * 
+ * Notas:
+ * -------
+ * - Diseñado para integrarse dentro de la arquitectura modular del proyecto.
+ * - Facilita la sincronización entre compras, inventario y proveedores.
+ */
+
+
+
 use tauri::State;
 use sqlx::{PgPool, Row};
 use rust_decimal::Decimal;

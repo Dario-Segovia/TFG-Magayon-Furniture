@@ -1,16 +1,16 @@
 <template>
   <button class="btn-back" @click="$router.back()">
-    <i class="fas fa-arrow-left"></i> Atrás
+    <i class="fas fa-arrow-left"></i> {{ $t('inventario.back') }}
   </button>
   <div class="inventario-container">
     <div class="header fade-in">
       <div class="header-content">
-        <h1><i class="fas fa-boxes"></i> Inventario</h1>
-        <p class="subtitle">Gestiona los productos y existencias de tu inventario</p>
+        <h1><i class="fas fa-boxes"></i> {{ $t('inventario.title') }}</h1>
+        <p class="subtitle">{{ $t('inventario.subtitle') }}</p>
       </div>
       <div class="header-actions">
         <button @click="showAgregar = true" class="btn-primary">
-          <i class="fas fa-plus"></i> Nuevo Ítem
+          <i class="fas fa-plus"></i> {{ $t('inventario.nuevo') }}
         </button>
         <input
           ref="inputArchivo"
@@ -19,7 +19,7 @@
           style="display: none"
           @change="onArchivoSeleccionado"
         />
-        <button @click="showImportarXml = true" class="btn-icon btn-xml" title="Importar XML">
+        <button @click="showImportarXml = true" class="btn-icon btn-xml" :title="$t('inventario.importar_xml')">
           <i class="fas fa-file-code"></i>
         </button>
       </div>
@@ -27,23 +27,23 @@
 
     <div class="filtros-container fade-in">
       <div class="search-box">
-        <input v-model="searchTerm" placeholder="Buscar en inventario..." />
+        <input v-model="searchTerm" :placeholder="$t('inventario.buscar')" />
         <i class="fas fa-search"></i>
       </div>
       <div class="filtros-avanzados">
         <button @click="mostrarFiltros = !mostrarFiltros">
-          <i class="fas fa-filter"></i> Filtros Avanzados
+          <i class="fas fa-filter"></i> {{ $t('inventario.filtros_avanzados') }}
         </button>
         <div v-if="mostrarFiltros" class="filtros-content">
           <div class="filtro-group">
-            <label for="categoria">Categoría:</label>
+            <label for="categoria">{{ $t('inventario.categoria') }}:</label>
             <select id="categoria" v-model="categoriaSeleccionada">
-              <option value="">Todas</option>
+              <option value="">{{ $t('inventario.todas') }}</option>
               <option v-for="cat in categorias" :key="cat" :value="cat">{{ cat }}</option>
             </select>
           </div>
           <div class="filtro-group">
-            <label>Rango de Precio</label>
+            <label>{{ $t('inventario.rango_precio') }}</label>
             <Slider
               v-model="rangoPrecio"
               :min="0"
@@ -54,15 +54,13 @@
               :strict="true"
               :format="{ to: v => v, from: v => v }"
             />
-           
           </div>
-          
         </div>
       </div>
     </div>
 
     <div v-if="loading" class="loading-container">
-      <i class="fas fa-spinner fa-spin"></i> Cargando inventario...
+      <i class="fas fa-spinner fa-spin"></i> {{ $t('inventario.cargando') }}
     </div>
     <div v-if="error" class="error-container">
       <i class="fas fa-exclamation-triangle"></i> {{ error }}
@@ -70,7 +68,7 @@
 
     <div class="inventario-grid">
       <div v-if="itemsFiltrados.length === 0" class="no-results">
-        No se encontraron ítems en el inventario.
+        {{ $t('inventario.no_resultados') }}
       </div>
       <div v-else class="cards-grid">
         <InventarioCard

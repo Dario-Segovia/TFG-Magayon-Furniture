@@ -1,4 +1,38 @@
-
+/*!
+ * Archivo: ventas.rs
+ * Proyecto: Magayon Furniture
+ * 
+ * Descripción general:
+ * --------------------
+ * Este módulo contiene la lógica relacionada con la gestión de **ventas** dentro de la aplicación.
+ * Expone funciones que se integran al backend Tauri como comandos para ser llamados desde el frontend Vue.
+ * 
+ * Funcionalidades principales:
+ * ----------------------------
+ * 1. `crear_venta`:  
+ *    Crea una nueva venta en la base de datos. Probablemente incluye datos del cliente, fecha, productos vendidos y total de la venta.
+ * 
+ * 2. `get_ventas`:  
+ *    Recupera una lista de ventas registradas. Ideal para mostrar en el historial o reportes.
+ * 
+ * 3. `update_venta`:  
+ *    Permite modificar detalles de una venta existente, como el total, productos o cliente asociado.
+ * 
+ * 4. `delete_venta`:  
+ *    Elimina una venta del sistema. Podría realizarse de forma lógica (soft delete) o permanente, según el diseño de la base de datos.
+ * 
+ * Dependencias esperadas:
+ * -----------------------
+ * - `sqlx`: Para las consultas asincrónicas a PostgreSQL.
+ * - `serde`: Para serialización/deserialización de estructuras (si se usan structs).
+ * - `tauri::command`: Para exponer funciones al frontend.
+ * 
+ * Notas:
+ * ------
+ * - Estas funciones deben validar los datos antes de insertarlos o modificarlos en la base de datos.
+ * - Se recomienda implementar manejo de errores para operaciones fallidas (ventas con datos incompletos, ID inexistentes, etc.).
+ * - Si las ventas incluyen múltiples productos, es posible que este módulo trabaje con una tabla `detalle_ventas` asociada.
+ */
 use tauri::State;
 use sqlx::{PgPool, Row};
 use rust_decimal::Decimal;
